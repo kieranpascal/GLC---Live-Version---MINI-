@@ -1,9 +1,18 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { PageRoute, RouteState } from '../types';
+import { parsePath, pathFor, resolveLegacyHash } from '../routing/routes';
+import {
+  LanguageCode,
+  LANGUAGE_MAP,
+  TranslationKey,
+  isValidLanguageCode,
+  translate,
+} from '../data/translations';
 
 interface NavigationContextType {
   route: RouteState;
   navigateTo: (page: PageRoute, params?: Partial<Omit<RouteState, 'page'>>) => void;
+  navigateToPath: (pathname: string) => void;
   isIntroModalOpen: boolean;
   introModalInterest: string;
   openIntroductionModal: (interest?: string) => void;
@@ -13,141 +22,161 @@ interface NavigationContextType {
   closeSearch: () => void;
   cookieConsent: boolean | null;
   setCookieConsent: (consent: boolean) => void;
+  language: LanguageCode;
+  setLanguage: (lang: LanguageCode) => void;
+  isRtl: boolean;
+  t: (key: TranslationKey) => string;
 }
 
 const NavigationContext = createContext<NavigationContextType | undefined>(undefined);
+const LANGUAGE_STORAGE_KEY = 'tglc_language';
 
-export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [route, setRoute] = useState<RouteState>(() => {
-    // Parse initial hash if present
-    const hash = window.location.hash.replace('#', '');
-    if (hash.startsWith('service/')) {
-      const parts = hash.split('/');
-      return { page: parts[2] ? 'subservice-detail' : 'service-detail', serviceId: parts[1], subServiceId: parts[2] };
-    }
-    if (hash.startsWith('article/')) {
-      return { page: 'journal-article', articleSlug: hash.replace('article/', '') };
-    }
-    if (hash === 'the-consortium' || hash === 'consortium') return { page: 'consortium' };
-    if (hash === 'about') return { page: 'about' };
-    if (hash === 'ethos') return { page: 'ethos' };
-    if (hash === 'approach') return { page: 'approach' };
-    if (hash === 'network') return { page: 'network' };
-    if (hash === 'our-london') return { page: 'our-london' };
-    if (hash === 'privacy-discretion' || hash === 'privacy') return { page: 'privacy-discretion' };
-    if (hash === 'services') return { page: 'services' };
-    if (hash === 'membership') return { page: 'membership' };
-    if (hash === 'commission-studio' || hash === 'studio') return { page: 'commission-studio' };
-    if (hash === 'case-studies' || hash === 'itineraries' || hash === 'portfolio') return { page: 'case-studies' };
-    if (hash === 'calendar') return { page: 'calendar' };
-    if (hash === 'journal') return { page: 'journal' };
-    if (hash === 'member-portal' || hash === 'portal') return { page: 'member-portal' };
-    if (hash === 'hidden-london' || hash === 'sub-rosa') return { page: 'hidden-london' };
-    if (hash === 'hidden-london-subterranean' || hash === 'sub-rosa/subterranean') return { page: 'hidden-london-subterranean' };
-    if (hash === 'hidden-london-industrial' || hash === 'sub-rosa/industrial') return { page: 'hidden-london-industrial' };
-    if (hash === 'hidden-london-combat' || hash === 'sub-rosa/combat') return { page: 'hidden-london-combat' };
-    if (hash === 'hidden-london-gaming' || hash === 'sub-rosa/gaming') return { page: 'hidden-london-gaming' };
-    if (hash === 'hidden-london-maritime' || hash === 'sub-rosa/maritime') return { page: 'hidden-london-maritime' };
-    if (hash === 'hidden-london-gastronomy' || hash === 'sub-rosa/gastronomy') return { page: 'hidden-london-gastronomy' };
-    if (hash === 'hidden-london-exploration' || hash === 'sub-rosa/exploration') return { page: 'hidden-london-exploration' };
-    if (hash === 'hidden-london-after-hours' || hash === 'sub-rosa/after-hours') return { page: 'hidden-london-after-hours' };
-    if (hash === 'hidden-london-urban-clubs' || hash === 'sub-rosa/urban-clubs') return { page: 'hidden-london-urban-clubs' };
-    if (hash === 'hidden-london-itinerary' || hash === 'sub-rosa/itinerary') return { page: 'hidden-london-itinerary' };
-    if (hash === 'contact') return { page: 'contact' };
-    if (hash === 'faq') return { page: 'faq' };
-    if (hash === 'privacy-policy') return { page: 'privacy-policy' };
-    if (hash === 'terms') return { page: 'terms' };
-    if (hash === 'cookie-policy') return { page: 'cookie-policy' };
-    if (hash === 'accessibility') return { page: 'accessibility' };
-    if (hash === 'image-credits') return { page: 'image-credits' };
-    if (hash === 'sitemap') return { page: 'sitemap' };
-    return { page: 'home' };
-  });
+interface NavigationProviderProps {
+  children: ReactNode;
+  initialUrl?: string;
+}
+
+export const NavigationProvider: React.FC<NavigationProviderProps> = ({ children, initialUrl }) => {
+  const [route, setRoute] = useState<RouteState>(() =>
+    parsePath(initialUrl ?? (typeof window !== 'undefined' ? window.location.pathname : '/'))
+  );
 
   const [isIntroModalOpen, setIsIntroModalOpen] = useState(false);
   const [introModalInterest, setIntroModalInterest] = useState('General Membership & Advisory');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [cookieConsent, setCookieConsentState] = useState<boolean | null>(() => {
-    try {
-      const stored = localStorage.getItem('tglc_cookie_consent');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [cookieConsent, setCookieConsentState] = useState<boolean | null>(null);
+  const [language, setLanguageState] = useState<LanguageCode>('en');
 
-  const setCookieConsent = (consent: boolean) => {
+  // Read persisted cookie consent and language after mount (SSR/prerender safe)
+  useEffect(() => {
+    try {
+      const storedConsent = window.localStorage.getItem('tglc_cookie_consent');
+      if (storedConsent !== null) {
+        setCookieConsentState(JSON.parse(storedConsent));
+      }
+      const storedLang = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
+      if (isValidLanguageCode(storedLang)) {
+        setLanguageState(storedLang);
+      }
+    } catch {
+      // ignore storage restrictions
+    }
+  }, []);
+
+  // Sync HTML lang and dir (RTL support for Arabic) whenever language changes
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const meta = LANGUAGE_MAP[language] ?? LANGUAGE_MAP.en;
+    document.documentElement.lang = meta.code;
+    document.documentElement.dir = meta.dir;
+  }, [language]);
+
+  // Redirect legacy hash routes on mount while preserving plain in-page anchors
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const rawHash = window.location.hash;
+    if (!rawHash) return;
+
+    const resolvedPath = resolveLegacyHash(rawHash);
+    if (resolvedPath) {
+      window.history.replaceState(null, '', resolvedPath);
+      setRoute(parsePath(resolvedPath));
+    }
+  }, []);
+
+  const setCookieConsent = useCallback((consent: boolean) => {
     setCookieConsentState(consent);
     try {
-      localStorage.setItem('tglc_cookie_consent', JSON.stringify(consent));
+      window.localStorage.setItem('tglc_cookie_consent', JSON.stringify(consent));
     } catch {
       // ignore
     }
-  };
+  }, []);
 
-  const openSearch = () => {
+  const setLanguage = useCallback((lang: LanguageCode) => {
+    if (!isValidLanguageCode(lang)) return;
+    setLanguageState(lang);
+    try {
+      window.localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const isRtl = (LANGUAGE_MAP[language]?.dir ?? 'ltr') === 'rtl';
+
+  const t = useCallback(
+    (key: TranslationKey) => translate(language, key),
+    [language]
+  );
+
+  const openSearch = useCallback(() => {
     setIsSearchOpen(true);
     setIsIntroModalOpen(false);
-  };
+  }, []);
 
-  const closeSearch = () => {
+  const closeSearch = useCallback(() => {
     setIsSearchOpen(false);
-  };
+  }, []);
 
-  const navigateTo = (page: PageRoute, params?: Partial<Omit<RouteState, 'page'>>) => {
+  const navigateToPath = useCallback((rawPath: string) => {
+    const nextRoute = parsePath(rawPath);
+    const canonical =
+      nextRoute.page === 'not-found'
+        ? rawPath.startsWith('/') ? rawPath : `/${rawPath}`
+        : pathFor(nextRoute.page, {
+            serviceId: nextRoute.serviceId,
+            subServiceId: nextRoute.subServiceId,
+            articleSlug: nextRoute.articleSlug,
+          });
+
+    setRoute(nextRoute);
+    setIsSearchOpen(false);
+    setIsIntroModalOpen(false);
+
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== canonical || window.location.hash) {
+        window.history.pushState(null, '', canonical);
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, []);
+
+  const navigateTo = useCallback((page: PageRoute, params?: Partial<Omit<RouteState, 'page'>>) => {
     const newState: RouteState = { page, ...params };
+    const nextPath = pathFor(page, params);
+
     setRoute(newState);
     setIsSearchOpen(false);
     setIsIntroModalOpen(false);
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
 
-    // Update URL hash cleanly
-    let hash: string = page;
-    if (page === 'service-detail' && params?.serviceId) {
-      hash = `service/${params.serviceId}`;
-      if (params.subServiceId) hash += `/${params.subServiceId}`;
-    } else if (page === 'subservice-detail' && params?.serviceId && params?.subServiceId) {
-      hash = `service/${params.serviceId}/${params.subServiceId}`;
-    } else if (page === 'journal-article' && params?.articleSlug) {
-      hash = `article/${params.articleSlug}`;
-    } else if (page === 'home') {
-      hash = '';
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname !== nextPath || window.location.hash) {
+        window.history.pushState(null, '', nextPath);
+      }
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     }
-    
-    if (hash) {
-      window.history.pushState(null, '', `#${hash}`);
-    } else {
-      window.history.pushState(null, '', window.location.pathname);
-    }
-  };
+  }, []);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
   }, [route.page, route.serviceId, route.subServiceId, route.articleSlug]);
 
-  const openIntroductionModal = (interest?: string) => {
+  const openIntroductionModal = useCallback((interest?: string) => {
     if (interest) setIntroModalInterest(interest);
     setIsSearchOpen(false);
     setIsIntroModalOpen(true);
-  };
+  }, []);
 
-  const closeIntroductionModal = () => {
+  const closeIntroductionModal = useCallback(() => {
     setIsIntroModalOpen(false);
-  };
+  }, []);
 
   useEffect(() => {
     const handlePopState = () => {
-      const hash = window.location.hash.replace('#', '');
-      if (hash.startsWith('service/')) {
-        const parts = hash.split('/');
-        setRoute({ page: parts[2] ? 'subservice-detail' : 'service-detail', serviceId: parts[1], subServiceId: parts[2] });
-      } else if (hash.startsWith('article/')) {
-        setRoute({ page: 'journal-article', articleSlug: hash.replace('article/', '') });
-      } else if (hash) {
-        setRoute({ page: hash as PageRoute });
-      } else {
-        setRoute({ page: 'home' });
-      }
+      setRoute(parsePath(window.location.pathname));
     };
 
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -178,6 +207,7 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
       value={{
         route,
         navigateTo,
+        navigateToPath,
         isIntroModalOpen,
         introModalInterest,
         openIntroductionModal,
@@ -186,7 +216,11 @@ export const NavigationProvider: React.FC<{ children: ReactNode }> = ({ children
         openSearch,
         closeSearch,
         cookieConsent,
-        setCookieConsent
+        setCookieConsent,
+        language,
+        setLanguage,
+        isRtl,
+        t,
       }}
     >
       {children}

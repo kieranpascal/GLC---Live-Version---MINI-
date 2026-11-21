@@ -1,12 +1,14 @@
 export type PageRoute =
   | 'home'
   | 'consortium'
+  | 'consortium-concierge'
   | 'about'
   | 'ethos'
   | 'approach'
   | 'network'
   | 'our-london'
   | 'privacy-discretion'
+  | 'cultural-traditions'
   | 'services'
   | 'service-detail' // requires serviceId
   | 'subservice-detail' // requires serviceId & subServiceId
@@ -82,40 +84,24 @@ export interface SubService {
   title: string;
   shortDesc: string;
   leadParagraph: string;
-  extendedOverview?: string[];
   detailedPoints: string[];
-  keyScenarios: {
-    title: string;
-    description: string;
-    outcome: string;
-  }[];
+  example?: string;
   image: string;
   galleryImages?: { image: string; caption: string }[];
-  operationalPhases?: { phase: string; title: string; detail: string }[];
-  slaBenchmarks?: { label: string; value: string; note: string }[];
-  vettedPartners?: string[];
   faqs?: { q: string; a: string }[];
+  regulatoryNote?: string;
 }
 
 export interface ServiceCategory {
   id: string;
   title: string;
-  kicker: string;
   tagline: string;
   shortDesc: string;
-  overview: string;
+  highlights: string[];
   heroImage: string;
   galleryImages: string[];
   galleryCaptions?: string[];
-  deliveryMetrics?: { label: string; metric: string }[];
   subServices: SubService[];
-  features: string[];
-  memberScenario: {
-    client: string;
-    brief: string;
-    solution: string;
-    details: string;
-  };
   faqs: { question: string; answer: string }[];
   regulatoryNote?: string;
 }
@@ -123,91 +109,45 @@ export interface ServiceCategory {
 export interface CalendarEvent {
   id: string;
   title: string;
-  category: 'Art & Culture' | 'Dining' | 'Fashion' | 'Music' | 'Sport' | 'Family' | 'London After Dark' | 'Private Invitations';
-  dates: string;
   month: string;
-  day: number;
-  location: string;
-  neighbourhood: string;
+  category: 'Art & Culture' | 'Dining' | 'Fashion' | 'Music' | 'Sport' | 'Seasonal';
   description: string;
-  curatorNote: string;
-  isPrivateInvitation?: boolean;
   image: string;
-  badge?: string;
 }
 
 export interface JournalArticle {
   slug: string;
   title: string;
   subtitle: string;
-  category: 'London Intelligence' | 'Travel Notes' | 'The Cultural Edit' | 'Dining & Entertaining' | 'Private Residences' | 'Objects of Desire' | 'Member Stories';
-  articleType?: 'News Dispatch' | 'Event Briefing' | 'Feature Essay' | 'Field Report';
-  eventDates?: string;
-  venueNote?: string;
-  keyTakeaways?: string[];
-  pullStats?: { value: string; label: string }[];
-  readTime: string;
-  publishDate: string;
+  category:
+    | 'London Intelligence'
+    | 'Travel Notes'
+    | 'The Cultural Edit'
+    | 'Dining & Entertaining'
+    | 'Private Residences'
+    | 'Objects of Desire';
   author: string;
-  authorRole: string;
   excerpt: string;
+  metaDescription: string;
+  relatedServiceId: string;
+  relatedServiceLabel: string;
   heroImage: string;
-  pullQuote?: string;
   contentParagraphs: string[];
   editorialImages?: string[];
   editorialCaptions?: string[];
   subheadings?: { title: string; paragraphs: string[] }[];
 }
 
-export interface MemberProfile {
-  id: string;
-  name: string;
-  tier: 'The London Membership' | 'The Global Membership' | 'The Private Office';
-  memberSince: string;
-  lifestyleManager: {
-    name: string;
-    role: string;
-    image: string;
-    phone: string;
-    email: string;
-  };
-  upcomingItinerary: {
-    destination: string;
-    dates: string;
-    flightDetails: string;
-    accommodation: string;
-    keyArrangements: string[];
-    chauffeurStatus: string;
-  };
-  upcomingArrangements: {
-    date: string;
-    time: string;
-    venue: string;
-    type: string;
-    details: string;
-    status: 'Confirmed' | 'Discreet Preparation' | 'In Progress';
-  }[];
-  activeRequests: {
-    id: string;
-    title: string;
-    category: string;
-    submittedDate: string;
-    status: 'Assigned to Manager' | 'Sourcing Options' | 'Confirmed';
-    notes: string;
-  }[];
-  savedPreferences: {
-    preferredAirlines: string[];
-    hotelStyle: string;
-    dietaryNotes: string;
-    vehiclePreference: string;
-    preferredContact: string;
-    confidentialityLevel: string;
-  };
-}
-
 export interface FAQItem {
   id: string;
-  category: 'Membership' | 'Services & Scope' | 'Discretion & Privacy' | 'International' | 'Family & Private Office' | 'Admissions';
+  category:
+    | 'General'
+    | 'Membership'
+    | 'Services & Scope'
+    | 'Discretion & Privacy'
+    | 'International'
+    | 'Family & Private Office'
+    | 'Admissions';
   question: string;
   answer: string;
 }

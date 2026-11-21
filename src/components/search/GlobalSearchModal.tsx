@@ -3,6 +3,8 @@ import { useNavigation } from '../../context/NavigationContext';
 import { searchTGLC } from '../../utils/searchEngine';
 import { SearchCategoryType, GlobalSearchResult } from '../../types';
 import { TGLC_CONTACT } from '../../data/tglcData';
+import { Link } from '../common/Link';
+import { SmartImage } from '../common/SmartImage';
 import {
   Search,
   X,
@@ -166,10 +168,6 @@ export const GlobalSearchModal: React.FC = () => {
     }
   }, [selectedIndex]);
 
-  const handleSelectResult = (result: GlobalSearchResult) => {
-    navigateTo(result.targetRoute, result.routeParams);
-  };
-
   const getCategoryIcon = (cat: GlobalSearchResult['category']) => {
     switch (cat) {
       case 'services':
@@ -210,7 +208,7 @@ export const GlobalSearchModal: React.FC = () => {
     { label: 'Luxury Suites & Estates', icon: <Bed className="w-3.5 h-3.5 text-[#E2BA6B]" />, query: 'hotel suite' },
     { label: 'Executive Chauffeurs', icon: <Car className="w-3.5 h-3.5 text-[#E2BA6B]" />, query: 'chauffeur' },
     { label: 'Private Aviation', icon: <Plane className="w-3.5 h-3.5 text-[#E2BA6B]" />, query: 'private aviation' },
-    { label: 'Sub-Rosa London', icon: <Key className="w-3.5 h-3.5 text-[#E2BA6B]" />, query: 'sub-rosa' },
+    { label: 'Hidden London', icon: <Key className="w-3.5 h-3.5 text-[#E2BA6B]" />, query: 'hidden london' },
   ];
 
   return (
@@ -240,9 +238,10 @@ export const GlobalSearchModal: React.FC = () => {
             {/* Top Header */}
             <div className="px-4 sm:px-6 py-3.5 bg-[#121622] border-b border-[#2A3142] flex items-center justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <img
+                <SmartImage
                   src="/assets/aistudio/tglc_crest_transparent.png"
-                  alt="TGLC Crest"
+                  alt="The Global Luxury Consortium crest"
+                  sizes="20px"
                   className="w-5 h-7 object-contain brightness-110 shrink-0"
                 />
                 <div className="min-w-0">
@@ -392,12 +391,12 @@ export const GlobalSearchModal: React.FC = () => {
                       const isSelected = idx === selectedIndex;
                       const isEvenRow = idx % 2 === 0;
                       return (
-                        <button
-                          type="button"
+                        <Link
                           key={result.id}
+                          page={result.targetRoute}
+                          params={result.routeParams}
                           data-index={idx}
-                          aria-selected={isSelected}
-                          onClick={() => handleSelectResult(result)}
+                          onClick={closeSearch}
                           onMouseEnter={() => setSelectedIndex(idx)}
                           onFocus={() => setSelectedIndex(idx)}
                           className={`w-full text-left group p-5 sm:p-6 cursor-pointer transition-all duration-150 flex items-start justify-between gap-4 outline-none ${
@@ -451,7 +450,7 @@ export const GlobalSearchModal: React.FC = () => {
                               </span>
                             )}
                           </div>
-                        </button>
+                        </Link>
                       );
                     })}
                   </div>
@@ -504,10 +503,10 @@ export const GlobalSearchModal: React.FC = () => {
                     className="space-y-5"
                   >
                     <div className="aspect-[16/9] w-full overflow-hidden border border-[#B98633]/60 bg-[#141925] relative">
-                      <img
+                      <SmartImage
                         src={getFolioVisual(activeResult)}
                         alt={activeResult.title}
-                        referrerPolicy="no-referrer"
+                        sizes="(min-width: 1024px) 40vw, 100vw"
                         className="w-full h-full object-cover brightness-105 contrast-105"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0F131D] via-transparent to-transparent" />
@@ -532,14 +531,15 @@ export const GlobalSearchModal: React.FC = () => {
                     </div>
 
                     <div className="pt-4 border-t border-[#202636] space-y-2.5">
-                      <button
-                        type="button"
-                        onClick={() => handleSelectResult(activeResult)}
+                      <Link
+                        page={activeResult.targetRoute}
+                        params={activeResult.routeParams}
+                        onClick={closeSearch}
                         className="btn-gold w-full min-h-[44px] text-xs flex items-center justify-center gap-2"
                       >
                         <span>Open Full Page</span>
                         <ArrowUpRight className="w-4 h-4 text-[#08090C]" />
-                      </button>
+                      </Link>
                       <button
                         type="button"
                         onClick={() => {

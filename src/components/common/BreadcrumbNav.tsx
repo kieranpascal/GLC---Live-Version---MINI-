@@ -3,9 +3,10 @@ import { useNavigation } from '../../context/NavigationContext';
 import { getBreadcrumbsForRoute, getBackLinkForRoute } from '../../utils/breadcrumb';
 import { ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
+import { Link } from './Link';
 
 export const BreadcrumbNav: React.FC = () => {
-  const { route, navigateTo } = useNavigation();
+  const { route } = useNavigation();
 
   const crumbs = getBreadcrumbsForRoute(route);
   const backLink = getBackLinkForRoute(route);
@@ -44,12 +45,13 @@ export const BreadcrumbNav: React.FC = () => {
                       {crumb.label}
                     </span>
                   ) : (
-                    <button
-                      onClick={() => navigateTo(crumb.route!, crumb.params)}
+                    <Link
+                      page={crumb.route}
+                      params={crumb.params}
                       className="text-[#CFA85E] hover:text-[#F4F1EA] transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C4933F] whitespace-nowrap"
                     >
                       {crumb.label}
-                    </button>
+                    </Link>
                   )}
                 </li>
               );
@@ -58,14 +60,15 @@ export const BreadcrumbNav: React.FC = () => {
         </nav>
 
         {backLink && (
-          <button
-            onClick={() => navigateTo(backLink.route, backLink.params)}
+          <Link
+            page={backLink.route}
+            params={backLink.params}
             className="hidden sm:inline-flex items-center gap-1.5 text-xs tracking-wide text-[#9C968A] hover:text-[#CFA85E] transition-colors shrink-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C4933F] whitespace-nowrap"
             aria-label={backLink.label}
           >
             <ArrowLeft className="w-3.5 h-3.5 text-[#C4933F]" aria-hidden="true" />
             <span>{backLink.label}</span>
-          </button>
+          </Link>
         )}
       </motion.div>
     </aside>

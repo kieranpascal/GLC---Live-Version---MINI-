@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { useNavigation } from '../../context/NavigationContext';
 import { LONDON_LOCATIONS, LONDON_DISTRICTS } from '../../data/londonLocationsData';
 import {
@@ -14,6 +14,7 @@ import {
   ArrowUpRight,
   X,
 } from 'lucide-react';
+import { SmartImage } from '../common/SmartImage';
 
 interface ConsortiumLocationsMapProps {
   initialDistrict?: string;
@@ -69,13 +70,13 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
           <div className="max-w-3xl space-y-3">
             <div className="flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-[#E2BA6B]">
               <Compass className="w-3.5 h-3.5 text-[#E2BA6B]" />
-              <span>Cartography of Access & Favoured Venues</span>
+              <span>London Guide</span>
             </div>
             <h2 className="font-serif text-3xl sm:text-5xl text-[#FAF7F0] leading-tight text-balance">
-              Consortium Locations
+              London Locations
             </h2>
             <p className="tglc-prose text-sm">
-              Explore London’s quietest enclaves and TGLC-trusted sanctums—from Bond Street horology vaults and department store penthouses to championship grass courts. Select or hover over a pin to review privileges.
+              Explore key London neighbourhoods and landmarks. Select a pin to see what we can arrange, subject to availability.
             </p>
           </div>
 
@@ -89,7 +90,7 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                   : 'text-[#9C968A] hover:text-[#F4F1EA]'
               }`}
             >
-              Interactive & Details
+              Map & Details
             </button>
             <button
               onClick={() => setViewMode('map')}
@@ -99,7 +100,7 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                   : 'text-[#9C968A] hover:text-[#F4F1EA]'
               }`}
             >
-              Full Cartography
+              Full Map
             </button>
             <button
               onClick={() => setViewMode('directory')}
@@ -109,7 +110,7 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                   : 'text-[#9C968A] hover:text-[#F4F1EA]'
               }`}
             >
-              Index List
+              List View
             </button>
           </div>
         </motion.div>
@@ -145,7 +146,7 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
           <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
             <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs scrollbar-none">
               <span className="text-[11px] uppercase tracking-wider text-[#CFA85E] mr-1 shrink-0">
-                Discipline:
+                Area:
               </span>
               {categories.map((cat) => (
                 <button
@@ -157,7 +158,7 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                       : 'text-[#9C968A] border-transparent hover:text-[#F4F1EA]'
                   }`}
                 >
-                  {cat === 'all' ? 'All Interests' : cat}
+                  {cat === 'all' ? 'All Areas' : cat}
                 </button>
               ))}
             </div>
@@ -169,7 +170,7 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search Selfridges, Harrods, watches..."
+                placeholder="Search London areas..."
                 className="w-full h-9 bg-[#12141A] border border-[#242630] pl-9 pr-8 text-xs text-[#F4F1EA] placeholder-[#7B766C] focus:outline-none focus:border-[#CFA85E]"
               />
               {searchQuery && (
@@ -206,11 +207,11 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                 <div className="flex items-center gap-2">
                   <Compass className="w-3.5 h-3.5 text-[#E2BA6B]" />
                   <span className="uppercase tracking-widest text-[10px] text-[#E2BA6B] tabular-nums">
-                    Interactive London Grid · 51.5074° N, 0.1278° W
+                    Interactive London Map · 51.5074° N, 0.1278° W
                   </span>
                 </div>
-                <span className="text-[11px] text-[#B8BECC] tabular-nums">
-                  {filteredVenues.length} {filteredVenues.length === 1 ? 'Enclave' : 'Enclaves'} Mapped
+                <span className="text-[11px] text-[#B8BECC]">
+                  Select a pin to explore
                 </span>
               </div>
 
@@ -221,7 +222,7 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                   className="w-full h-full transition-all duration-700 ease-out"
                   preserveAspectRatio="xMidYMid meet"
                   role="img"
-                  aria-label="Interactive Cartography of London Luxury Enclaves"
+                  aria-label="Interactive map of London neighbourhoods"
                 >
                   <defs>
                     <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -359,8 +360,9 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                           <motion.circle
                             cx="0"
                             cy="0"
-                            initial={{ r: 16, opacity: 0.9 }}
-                            animate={{ r: 24, opacity: 0.4 }}
+                            r="20"
+                            initial={{ scale: 0.85, opacity: 0.9 }}
+                            animate={{ scale: 1.25, opacity: 0.35 }}
                             transition={{ duration: 1.6, repeat: Infinity, repeatType: 'reverse' }}
                             fill="url(#pinGlow)"
                           />
@@ -416,10 +418,10 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                 {/* Legend & Controls */}
                 <div className="absolute bottom-3 left-3 bg-[#08090C]/90 border border-[#242630] px-3 py-1.5 text-[10px] text-[#B5AFA3] flex items-center gap-3">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rotate-45 bg-[#8B672B]" /> TGLC Enclave
+                    <span className="w-2 h-2 rotate-45 bg-[#8B672B]" /> London Location
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rotate-45 bg-[#CFA85E]" /> Active Selection
+                    <span className="w-2 h-2 rotate-45 bg-[#CFA85E]" /> Selected
                   </span>
                 </div>
 
@@ -435,8 +437,8 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
 
               {/* Venue Quick Chip Bar */}
               <div className="mt-4 pt-3 border-t border-[#20232E]">
-                <div className="text-[10px] uppercase tracking-widest text-[#CFA85E] mb-2 tabular-nums">
-                  Mapped in this view ({filteredVenues.length}):
+                <div className="text-[10px] uppercase tracking-widest text-[#CFA85E] mb-2">
+                  Mapped in this view
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                   {filteredVenues.map((v) => (
@@ -468,95 +470,94 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                   transition={{ duration: 0.25 }}
                   className="space-y-5"
                 >
-                    {/* Image */}
-                    <div className="aspect-[16/10] w-full overflow-hidden relative bg-[#181A22] border border-[#242630]">
-                      <img
-                        src={currentDisplayVenue.image}
-                        alt={currentDisplayVenue.name}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover brightness-105 contrast-105 transition-transform duration-700 hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#07080B]/90 via-transparent to-transparent" />
+                  {/* Image */}
+                  <div className="aspect-[16/10] w-full overflow-hidden relative bg-[#181A22] border border-[#242630]">
+                    <SmartImage
+                      src={currentDisplayVenue.image}
+                      alt={currentDisplayVenue.name}
+                      sizes="(max-width: 1024px) 100vw, 42vw"
+                      className="w-full h-full object-cover brightness-105 contrast-105 transition-transform duration-700 hover:scale-104"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#07080B]/90 via-transparent to-transparent" />
 
-                      <div className="absolute bottom-3 left-3 right-3 text-xs text-[#FAF7F0] flex items-center justify-between">
-                        <span className="flex items-center gap-1 text-[#E2BA6B]">
-                          <MapPin className="w-3.5 h-3.5 shrink-0" />
-                          <span>{currentDisplayVenue.neighborhood}</span>
-                        </span>
-                        <span className="text-[10px] font-mono text-[#D4D8E2] tabular-nums">{currentDisplayVenue.postcode}</span>
-                      </div>
+                    <div className="absolute bottom-3 left-3 right-3 text-xs text-[#FAF7F0] flex items-center justify-between">
+                      <span className="flex items-center gap-1 text-[#E2BA6B]">
+                        <MapPin className="w-3.5 h-3.5 shrink-0" />
+                        <span>{currentDisplayVenue.neighborhood}</span>
+                      </span>
+                      <span className="text-[10px] font-mono text-[#D4D8E2] tabular-nums">{currentDisplayVenue.postcode}</span>
                     </div>
+                  </div>
 
-                    {/* Title */}
-                    <div className="space-y-1.5">
-                      <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#E2BA6B] font-medium">
-                        <span>{currentDisplayVenue.districtName}</span>
-                        <span aria-hidden="true">·</span>
-                        <span className="text-[#D4D8E2]">{currentDisplayVenue.category}</span>
-                      </div>
-                      <h3 className="font-serif text-2xl text-[#FAF7F0] leading-tight">
-                        {currentDisplayVenue.name}
-                      </h3>
-                      <p className="text-xs text-[#E2BA6B] italic">
-                        “{currentDisplayVenue.tagline}”
-                      </p>
+                  {/* Title */}
+                  <div className="space-y-1.5">
+                    <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#E2BA6B] font-medium">
+                      <span>{currentDisplayVenue.districtName}</span>
+                      <span aria-hidden="true">·</span>
+                      <span className="text-[#D4D8E2]">{currentDisplayVenue.category}</span>
                     </div>
-
-                    <p className="tglc-prose text-xs sm:text-sm">
-                      {currentDisplayVenue.summary}
+                    <h3 className="font-serif text-2xl text-[#FAF7F0] leading-tight">
+                      {currentDisplayVenue.name}
+                    </h3>
+                    <p className="text-xs text-[#E2BA6B] italic">
+                      “{currentDisplayVenue.tagline}”
                     </p>
+                  </div>
 
-                    <div className="p-4 bg-[#0B0D13] border border-[#222530] space-y-2">
-                      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#E2BA6B]">
-                        <Compass className="w-3 h-3" />
-                        <span>Curator’s Operational Insight</span>
-                      </div>
-                      <p className="text-xs text-[#D4D8E2] leading-relaxed font-light">
-                        {currentDisplayVenue.curatorNotes}
-                      </p>
-                    </div>
+                  <p className="tglc-prose text-xs sm:text-sm">
+                    {currentDisplayVenue.summary}
+                  </p>
 
-                    <div className="space-y-2.5">
-                      <h4 className="text-[11px] uppercase tracking-widest text-[#CFA85E] font-medium">
-                        TGLC Access Privileges
-                      </h4>
-                      <ul className="space-y-2">
-                        {currentDisplayVenue.tglcPrivileges.map((privilege, pIdx) => (
-                          <li key={pIdx} className="text-xs text-[#C8C2B7] flex items-start gap-2.5 font-light">
-                            <span className="w-1.5 h-1.5 rotate-45 bg-[#CFA85E] mt-1.5 shrink-0" />
-                            <span className="leading-relaxed">{privilege}</span>
-                          </li>
-                        ))}
-                      </ul>
+                  <div className="p-4 bg-[#0B0D13] border border-[#222530] space-y-2">
+                    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-[#E2BA6B]">
+                      <Compass className="w-3 h-3" />
+                      <span>Local Note</span>
                     </div>
+                    <p className="text-xs text-[#D4D8E2] leading-relaxed font-light">
+                      {currentDisplayVenue.curatorNotes}
+                    </p>
+                  </div>
 
-                    <div className="pt-4 border-t border-[#222530] grid grid-cols-2 gap-4 text-xs">
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-[#8B672B] block">Prime Season</span>
-                        <span className="text-[#D9D4CA] text-xs font-light">{currentDisplayVenue.recommendedSeason}</span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-[#8B672B] block">Adjacent Haven</span>
-                        <span className="text-[#D9D4CA] text-xs font-light">{currentDisplayVenue.closestSanctuary}</span>
-                      </div>
-                    </div>
+                  <div className="space-y-2.5">
+                    <h4 className="text-[11px] uppercase tracking-widest text-[#CFA85E] font-medium">
+                      What we can arrange (subject to availability)
+                    </h4>
+                    <ul className="space-y-2">
+                      {currentDisplayVenue.tglcPrivileges.map((privilege, pIdx) => (
+                        <li key={pIdx} className="text-xs text-[#C8C2B7] flex items-start gap-2.5 font-light">
+                          <span className="w-1.5 h-1.5 rotate-45 bg-[#CFA85E] mt-1.5 shrink-0" />
+                          <span className="leading-relaxed">{privilege}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                    {/* Clean hairline box replacing left thick accent bar */}
-                    <div className="text-xs text-[#B5AFA3] bg-[#0D0F14] p-3.5 border border-[#8B672B]/50 leading-relaxed font-light">
-                      <span className="text-[#CFA85E] font-medium mr-1.5">Insider Note:</span>
-                      {currentDisplayVenue.insiderTip}
+                  <div className="pt-4 border-t border-[#222530] grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#8B672B] block">Best Time to Visit</span>
+                      <span className="text-[#D9D4CA] text-xs font-light">{currentDisplayVenue.recommendedSeason}</span>
                     </div>
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider text-[#8B672B] block">Nearby</span>
+                      <span className="text-[#D9D4CA] text-xs font-light">{currentDisplayVenue.closestSanctuary}</span>
+                    </div>
+                  </div>
 
-                    <div className="pt-1">
-                      <button
-                        onClick={() => openIntroductionModal(`Inquiry regarding access to ${currentDisplayVenue.name}`)}
-                        className="btn-gold w-full py-3.5 text-xs flex items-center justify-center gap-2"
-                      >
-                        <span>Request Private Arrangements Here</span>
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                      </motion.div>
+                  <div className="text-xs text-[#B5AFA3] bg-[#0D0F14] p-3.5 border border-[#8B672B]/50 leading-relaxed font-light">
+                    <span className="text-[#CFA85E] font-medium mr-1.5">Good to know:</span>
+                    {currentDisplayVenue.insiderTip}
+                  </div>
+
+                  <div className="pt-1">
+                    <button
+                      onClick={() => openIntroductionModal(`Enquiry about ${currentDisplayVenue.name}`)}
+                      className="btn-gold w-full py-3.5 text-xs flex items-center justify-center gap-2"
+                    >
+                      <span>Request an introduction</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </motion.div>
               </div>
             )}
           </div>
@@ -566,8 +567,8 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
         {viewMode === 'directory' || viewMode === 'map' ? (
           <div className="space-y-6 pt-4">
             <div className="border-b border-[#222530] pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h3 className="font-serif text-2xl text-[#F4F1EA] tabular-nums">
-                Complete Enclave Directory ({filteredVenues.length})
+              <h3 className="font-serif text-2xl text-[#F4F1EA]">
+                London Directory
               </h3>
               <span className="text-xs text-[#CFA85E]">
                 St James’s · Mayfair · Knightsbridge · Marylebone · Wimbledon
@@ -586,11 +587,11 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                 >
                   <div>
                     <div className="aspect-[16/10] w-full overflow-hidden bg-[#181A22] relative">
-                      <img
+                      <SmartImage
                         src={venue.image}
                         alt={venue.name}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                       />
                     </div>
 
@@ -603,7 +604,7 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
                         <span className="text-[#8F98AA]">{venue.postcode}</span>
                       </div>
                       <h4 className="font-serif text-xl text-[#FAF7F0] group-hover:text-[#E2BA6B] transition-colors">
-                        {venue.name}
+                        <span className="card-title-underline">{venue.name}</span>
                       </h4>
                       <p className="text-xs tglc-prose line-clamp-3">
                         {venue.summary}
@@ -611,7 +612,7 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
 
                       <div className="pt-3 border-t border-[#20232E] space-y-1">
                         <span className="text-[10px] uppercase tracking-wider text-[#8B672B] block">
-                          Access Highlights:
+                          What we can arrange:
                         </span>
                         <p className="text-xs text-[#C8C2B7] line-clamp-2 font-light">
                           {venue.tglcPrivileges.join(' · ')}
@@ -622,10 +623,10 @@ export const ConsortiumLocationsMap: React.FC<ConsortiumLocationsMapProps> = ({ 
 
                   <div className="p-6 pt-0">
                     <button
-                      onClick={() => openIntroductionModal(`Inquiry regarding ${venue.name}`)}
+                      onClick={() => openIntroductionModal(`Enquiry about ${venue.name}`)}
                       className="btn-outline-gold w-full py-2.5 text-[11px] flex items-center justify-center gap-1.5"
                     >
-                      <span>Inquire Regarding Access</span>
+                      <span>Ask about this area</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />
                     </button>
                   </div>

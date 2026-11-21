@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { audioSynthesizer, AmbienceMode } from '../utils/audioSynthesizer';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import type { AmbienceMode } from '../utils/audioSynthesizer';
 
 export type LuxuryThemeMode = 'mayfair-heritage' | 'nocturne-stealth' | 'white-tie';
 
@@ -21,53 +21,78 @@ interface AmbienceContextType {
 
 const AmbienceContext = createContext<AmbienceContextType | undefined>(undefined);
 
+type AudioSynthesizerModule = typeof import('../utils/audioSynthesizer');
+
 export const AmbienceProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [mode, setMode] = useState<AmbienceMode>('hearth');
   const [volume, setVolumeState] = useState(0.45);
-  const [theme, setThemeState] = useState<LuxuryThemeMode>(() => {
+  const synthRef = useRef<AudioSynthesizerModule['audioSynthesizer'] | null>(null);
+  const [theme, setThemeState] = useState<LuxuryThemeMode>('mayfair-heritage');
+
+  useEffect(() => {
     try {
-      const stored = localStorage.getItem('tglc_theme_remix');
+      const stored = window.localStorage.getItem('tglc_theme_remix');
       if (stored === 'nocturne-stealth' || stored === 'white-tie' || stored === 'mayfair-heritage') {
-        return stored;
+        setThemeState(stored);
       }
     } catch (_) {}
-    return 'mayfair-heritage';
-  });
+  }, []);
 
   const setTheme = (newTheme: LuxuryThemeMode) => {
     setThemeState(newTheme);
     try {
-      localStorage.setItem('tglc_theme_remix', newTheme);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('tglc_theme_remix', newTheme);
+      }
     } catch (_) {}
   };
 
   useEffect(() => {
+    if (typeof document === 'undefined') return;
     const root = document.documentElement;
     root.classList.remove('theme-mayfair-heritage', 'theme-nocturne-stealth', 'theme-white-tie');
     root.classList.add(`theme-${theme}`);
   }, [theme]);
 
+  const loadSynthesizer = async () => {
+    if (!synthRef.current) {
+      const mod = await import('../utils/audioSynthesizer');
+      synthRef.current = mod.audioSynthesizer;
+    }
+    return synthRef.current;
+  };
+
   const togglePlay = () => {
     if (isPlaying) {
-      audioSynthesizer.stop();
+      synthRef.current?.stop();
       setIsPlaying(false);
     } else {
-      audioSynthesizer.start(mode, volume);
       setIsPlaying(true);
+      loadSynthesizer()
+        .then((synth) => {
+          synth.start(mode, volume);
+        })
+        .catch(() => {
+          setIsPlaying(false);
+        });
     }
   };
 
   const setAmbienceMode = (newMode: AmbienceMode) => {
     setMode(newMode);
     if (isPlaying) {
-      audioSynthesizer.start(newMode, volume);
+      loadSynthesizer()
+        .then((synth) => {
+          synth.start(newMode, volume);
+        })
+        .catch(() => {});
     }
   };
 
   const setVolume = (val: number) => {
     setVolumeState(val);
-    audioSynthesizer.setVolume(val);
+    synthRef.current?.setVolume(val);
   };
 
   return (

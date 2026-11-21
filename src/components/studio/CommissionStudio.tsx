@@ -3,15 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigation } from '../../context/NavigationContext';
 import { GoldDivider } from '../common/GoldDivider';
+import { SmartImage } from '../common/SmartImage';
 import { TGLC_CONTACT } from '../../data/tglcData';
-import { simulatedSupabase } from '../../services/supabaseClient';
 import {
   Shield,
   ArrowRight,
-  ArrowUpRight,
   Check,
   Calendar,
   MapPin,
@@ -22,10 +21,7 @@ import {
   Send,
   CheckCircle2,
   Clock,
-  Sliders,
   Compass,
-  Disc3,
-  Layers,
   Info,
   Download,
   CheckSquare,
@@ -33,842 +29,779 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-type ScenarioCategory =
+type PlanCategory =
   | 'All'
-  | 'Urban Clubs & Nightlife'
-  | 'Sub-Rosa & Vaults'
-  | 'Combat & Motorsport'
-  | 'Aviation & Yachts'
-  | 'Estates & Gastronomy'
-  | 'Arts, Couture & Longevity';
+  | 'Nightlife & Music'
+  | 'Historic London'
+  | 'Sport & Motoring'
+  | 'Travel & Sea'
+  | 'Country & Dining'
+  | 'Culture & Wellness';
 
-interface CommissionScenario {
+interface StudioPlan {
   id: string;
-  category: Exclude<ScenarioCategory, 'All'>;
+  category: Exclude<PlanCategory, 'All'>;
   title: string;
-  kicker: string;
   tagline: string;
   image: string;
   location: string;
   duration: string;
-  baseHours: number;
-  baseDisbursement: number;
+  defaultHours: number;
   guidanceNote: string;
   deliverables: string[];
 }
 
-interface PrebuiltBlueprint {
+interface SampleBrief {
   id: string;
   title: string;
   badge: string;
   summary: string;
   rationale: string;
   image: string;
-  scenarioId: string;
-  fleetId: string;
-  protocolId: string;
-  armourId: string;
-  apronId: string;
-  cellarId: string;
-  staffingId: string;
+  planId: string;
+  transportId: string;
+  privacyId: string;
+  vehicleStyleId: string;
+  arrivalId: string;
+  hospitalityId: string;
+  supportId: string;
   hours: number;
-  codename: string;
+  referenceLabel: string;
   departurePoint: string;
   guestCount: string;
   targetDate: string;
-  cellarDietary: string;
+  notes: string;
 }
 
-const SCENARIO_CATEGORIES: ScenarioCategory[] = [
+const PLAN_CATEGORIES: PlanCategory[] = [
   'All',
-  'Urban Clubs & Nightlife',
-  'Sub-Rosa & Vaults',
-  'Combat & Motorsport',
-  'Aviation & Yachts',
-  'Estates & Gastronomy',
-  'Arts, Couture & Longevity',
+  'Nightlife & Music',
+  'Historic London',
+  'Sport & Motoring',
+  'Travel & Sea',
+  'Country & Dining',
+  'Culture & Wellness',
 ];
 
-const SCENARIOS: CommissionScenario[] = [
-  // 1. Urban Clubs & Nightlife
+const STUDIO_PLANS: StudioPlan[] = [
+  // 1. Nightlife & Music
   {
-    id: 'urban-hiphop-concrete-vault',
-    category: 'Urban Clubs & Nightlife',
-    title: 'Vauxhall Concrete Bass Vault & Touring DJ Booth Buyout',
-    kicker: 'Sector 09 · Urban Sound & Street Luxury',
-    tagline: 'Poured-concrete late-night hip-hop & vinyl sound system buyout with satin-black Maybach alley ingress.',
+    id: 'late-night-sound-room',
+    category: 'Nightlife & Music',
+    title: 'Late-Night Vinyl Club & Private Booth',
+    tagline: 'Private tables at a licensed London sound room with waiting cars home.',
     image: '/assets/aistudio/urban_hiphop_club_1794391691841.jpg',
-    location: 'Vauxhall & Nine Elms Railway Viaduct',
-    duration: 'Late Night (23:00 – 05:00)',
-    baseHours: 8,
-    baseDisbursement: 16500,
-    guidanceNote: 'Directors recommend Tier 2 Close Protection plus Faraday pouches for artist & principal privacy inside high-energy bass rooms.',
+    location: 'Central & South London',
+    duration: 'Late Evening',
+    defaultHours: 6,
+    guidanceNote: 'We coordinate table hosting, arrival timing and waiting cars, subject to availability.',
     deliverables: [
-      'Elevated steel & smoked-glass DJ booth gallery overlooking the custom horn stacks',
-      'Back-alley unmarked roller-shutter vehicle arrival with Close Protection advance sweep',
-      'Rare Japanese whisky, tequila extra anejo & magnum champagne table ledger without bottle parades',
-      'Staggered satin-black Maybach departure sequence directly from loading court',
+      'Reserved booth inside a licensed late-night music room',
+      'Pre-arranged drinks list waiting at your table',
+      'Dedicated chauffeur waiting outside for a calm return',
     ],
   },
   {
-    id: 'shoreditch-vinyl-rooftop',
-    category: 'Urban Clubs & Nightlife',
-    title: 'Shoreditch Brutalist DJ Loft & Rare Acetate Vinyl Session',
-    kicker: 'Redchurch Street · E2 Sound Sanctum',
-    tagline: 'Floor-to-ceiling loft windows, rotary Bozak mixers, and headline hip-hop & electronic selectors after 01:00.',
+    id: 'shoreditch-loft-gathering',
+    category: 'Nightlife & Music',
+    title: 'Shoreditch Loft Supper & Vinyl Night',
+    tagline: 'A hired East London loft with private catering and guest DJs.',
     image: '/assets/aistudio/shoreditch_dj_loft_1794391691810.jpg',
-    location: 'Redchurch Street & Bethnal Roofs, E2',
-    duration: 'Nocturne (22:00 – 04:00)',
-    baseHours: 8,
-    baseDisbursement: 14000,
-    guidanceNote: 'Pair with the VIP Sprinter JetVan for multi-guest mobile pre-drinking and acoustic isolation across East London transit.',
+    location: 'Shoreditch, London E2',
+    duration: 'Evening',
+    defaultHours: 6,
+    guidanceNote: 'Ideal for birthdays or private launches where you want control over music and guests.',
     deliverables: [
-      'Private loft keycard directly from service cargo lift bypassing street queue completely',
-      'Custom analog walnut speaker array tuned by East London mastering engineer',
-      'Late-night yakitori & truffle wagyu hand-rolls served tableside inside booth',
+      'Private loft hire with licensed sound setup and host',
+      'Tailored late-night menu and bar service for your party',
+      'Coordinated chauffeur pick-ups and drop-offs across London',
     ],
   },
   {
-    id: 'soho-stealth-couture-drop',
-    category: 'Urban Clubs & Nightlife',
-    title: 'Soho Stealth Streetwear Vault & Mayfair Alley Listening Club',
-    kicker: 'Brewer Street · Street Meets Ultra-Wealth',
-    tagline: 'After-hours sample archive inspection followed by private hip-hop listening lounge in Mayfair mews.',
+    id: 'soho-fashion-listening-evening',
+    category: 'Nightlife & Music',
+    title: 'Soho Private Styling & Listening Bar',
+    tagline: 'Private showroom appointments followed by a quiet Mayfair listening lounge.',
     image: '/assets/aistudio/luxury_streetwear_salon_1794391693258.jpg',
-    location: 'Soho Sample Vaults to Mayfair Mews',
-    duration: 'Evening & Night (19:30 – 02:30)',
-    baseHours: 8,
-    baseDisbursement: 11500,
-    guidanceNote: 'Ideal for visiting recording artists, NBA/Premier League athletes, and creative founders seeking culture without paparazzi.',
+    location: 'Soho & Mayfair, London W1',
+    duration: 'Afternoon & Evening',
+    defaultHours: 6,
+    guidanceNote: 'Great for visiting guests who want quiet shopping followed by unhurried drinks.',
     deliverables: [
-      '00:00 closed-door access to rare archival sneaker, leather jacket & numbered runway pieces',
-      'Satin-black Maybach S680 courier staging between Soho alleyways and Mayfair listening room',
-      'Strict no-lens policy enforced with magnetic Faraday pouches on arrival',
+      'Private showroom viewing with independent menswear or fashion stylists',
+      'Chauffeur link between Soho boutiques and Mayfair bars',
+      'Reserved corner booth for late-evening music and drinks',
     ],
   },
 
-  // 2. Sub-Rosa & Vaults
+  // 2. Historic London
   {
-    id: 'sub-rosa-thames-vault',
-    category: 'Sub-Rosa & Vaults',
-    title: 'Thames Stealth Speed Run & 300-Yr Bullion Vault Dinner',
-    kicker: 'Square Mile & River Thames',
-    tagline: 'Midnight Thames sprint on a 45ft matte-black interceptor followed by private catacomb dining.',
+    id: 'thames-cruise-vault-dinner',
+    category: 'Historic London',
+    title: 'Evening Thames Cruise & Cellar Dinner',
+    tagline: 'A licensed river cruise followed by dinner inside a historic City cellar.',
     image: '/assets/aistudio/hidden_nocturne_stealth_boat_1794295325076.jpg',
-    location: 'Wapping Pier to Bank Catacombs',
-    duration: 'Evening (5 Hours)',
-    baseHours: 8,
-    baseDisbursement: 15500,
-    guidanceNote: 'Combine the 45ft Nocturne Interceptor with Private Pier Key access to bypass central London traffic completely after dark.',
+    location: 'Thames Pier to City of London',
+    duration: 'Evening',
+    defaultHours: 6,
+    guidanceNote: 'Combining river travel with a City cellar keeps evening transit calm and memorable.',
     deliverables: [
-      'High-speed twin-engine Thames night run under Tower Bridge at 38 knots',
-      'Unmarked vault descent through 20-ton steel circular bank bulkheads',
-      'Private chef 6-course tasting menu paired with rare 19th-century Armagnacs',
-      'SIA tactical plainclothes security team accompanying throughout',
+      'Licensed private boat cruise with skipper along floodlit bridges',
+      'Private candlelit dinner inside a hired historic vault',
+      'Waiting chauffeur cars arranged for the journey home',
     ],
   },
   {
-    id: 'down-street-bunker-briefing',
-    category: 'Sub-Rosa & Vaults',
-    title: 'Down Street Ghost Station & Sovereign Map-Room Briefing',
-    kicker: 'Piccadilly Underground Deep Level',
-    tagline: '1907 disused Tube platforms and Churchill’s wartime cabinet chambers unlocked for 10 principals.',
+    id: 'heritage-underground-evening',
+    category: 'Historic London',
+    title: 'Heritage Underground Tour & Private Supper',
+    tagline: 'A guided visit to historic London spaces followed by dinner in Mayfair.',
     image: '/assets/aistudio/down_street_station_1794391687146.jpg',
-    location: 'Down Street Secret Portal, Mayfair W1J',
-    duration: 'Evening (4.5 Hours)',
-    baseHours: 6,
-    baseDisbursement: 19500,
-    guidanceNote: 'Natural 72ft London clay overburden provides innate RF shielding—recommended for sensitive M&A or family office councils.',
+    location: 'Mayfair & Central London',
+    duration: 'Evening',
+    defaultHours: 5,
+    guidanceNote: 'Private heritage visits run through official venue programmes and are subject to availability.',
     deliverables: [
-      'Unmarked brick entrance key unlocking directly into disused 1907 station spiral shaft',
-      'Candles and low-kelvin brass uplighting staged across historic tile platforms',
-      'Curated St James’s wine library decanted underground with senior butler attendance',
+      'Private group tour with an official London heritage guide',
+      'Reserved private dining room nearby with set wine pairings',
+      'Direct chauffeur transfers between your hotel and each stop',
     ],
   },
   {
-    id: 'tower-bascule-recital',
-    category: 'Sub-Rosa & Vaults',
-    title: 'Tower Bridge Bascule Chamber & Thames Rooftop Sky-Gantry',
-    kicker: 'SE1 Hydraulic Abyss & East Sky',
-    tagline: 'Private acoustic performance beside 1,200-ton bridge counterweights below the Thames riverbed.',
+    id: 'landmark-recital-terrace',
+    category: 'Historic London',
+    title: 'River Landmark Hire & Private Recital',
+    tagline: 'An evening drinks reception and acoustic performance at a hired London landmark.',
     image: '/assets/aistudio/tower_bascule_vault_1794391687426.jpg',
-    location: 'Tower Bridge South Pier Sub-Level',
-    duration: 'Evening (5 Hours)',
-    baseHours: 8,
-    baseDisbursement: 21000,
-    guidanceNote: 'Works effortlessly with a midnight river transfer straight to Canary Wharf heliport or Wapping slipway.',
+    location: 'Central London Riverside',
+    duration: 'Evening',
+    defaultHours: 6,
+    guidanceNote: 'Historic London landmarks need advance planning so venue approvals stay smooth.',
     deliverables: [
-      'Bridge Master escort onto cast-iron walkways overlooking Victorian hydraulic machinery',
-      'Custom 10-second reverb brass or solo cello recital orchestrated for 14 guests',
-      'Private river pier embarkation immediately below southern abutment',
+      'Private event hire coordinated directly with the venue team',
+      'Live chamber musicians booked for your private reception',
+      'Riverside boat or chauffeur departures after the final toast',
     ],
   },
 
-  // 3. Combat & Motorsport
+  // 3. Sport & Motoring
   {
-    id: 'underground-combat-bermondsey',
-    category: 'Combat & Motorsport',
-    title: 'Bermondsey Arch Unsanctioned Exhibition & Ringside Salon',
-    kicker: 'Southwark & East End Archways',
-    tagline: 'Fifty invited patrons, an elevated ring under Victorian soot bricks, and raw pugilism.',
+    id: 'arena-fight-night-hospitality',
+    category: 'Sport & Motoring',
+    title: 'London Fight Night Ringside & Dinner',
+    tagline: 'Prime seats at a licensed London bout with dinner and waiting cars.',
     image: '/assets/aistudio/east_end_boxing_1794391694652.jpg',
-    location: 'Bermondsey Railway Arches, SE16',
-    duration: 'Full Evening (6 Hours)',
-    baseHours: 10,
-    baseDisbursement: 18500,
-    guidanceNote: 'We strictly assign two SIA close-protection officers ringside to manage egress through industrial Southwark lanes.',
+    location: 'London Arenas',
+    duration: 'Evening',
+    defaultHours: 6,
+    guidanceNote: 'We arrange hospitality tickets, nearby dining and waiting drivers, subject to availability.',
     deliverables: [
-      'Front-row ringside table directly adjacent to the red corner with personal security cordon',
-      'Tactical advance sweep and plainclothes security escort from departure to return',
-      'Caviar and vintage single malt service served ringside during the 6-fight exhibition card',
-      'Private post-match introduction with corner trainers and fighters',
+      'Ringside seats and official arena hospitality lounge entry',
+      'Early dinner table booked close to the venue',
+      'Dedicated driver waiting for straightforward post-fight departure',
     ],
   },
   {
-    id: 'o2-cageside-tunnel',
-    category: 'Combat & Motorsport',
-    title: 'Championship Octagon Cageside & Athlete Warmup Tunnel',
-    kicker: 'Greenwich Arena VIP Corridor',
-    tagline: 'Drive directly down the underground arena loading bay into official athlete warm-up rooms.',
+    id: 'championship-sport-suite',
+    category: 'Sport & Motoring',
+    title: 'Major Arena Suite & Private Transfers',
+    tagline: 'Hosted hospitality at major London sporting events with smooth arrivals.',
     image: '/assets/aistudio/ufc_arena_ringside.jpg',
-    location: 'The O2 Underground Logistics Bay, SE10',
-    duration: 'Evening (6 Hours)',
-    baseHours: 8,
-    baseDisbursement: 22000,
-    guidanceNote: 'Pair with Armoured B6 Range Rover or Mercedes Sprinter JetVan for seamless subterranean ramp admission.',
+    location: 'Greenwich & Wembley',
+    duration: 'Evening',
+    defaultHours: 6,
+    guidanceNote: 'Booking dinner and transport early takes the crowd stress out of big arena nights.',
     deliverables: [
-      'Official athletic promotion tunnel accreditation for warmup pad-work observation',
-      'Octagon Row 1 cageside allocation with dedicated private runner',
-      'Early tunnel extraction 12 minutes prior to general arena egress',
+      'Official suite or hospitality seating arranged subject to availability',
+      'Tailored food and drinks service for your guests',
+      'Chauffeur staging for direct departure after the event',
     ],
   },
   {
-    id: 'continental-hypercar-convoy',
-    category: 'Combat & Motorsport',
-    title: 'Bugatti & Koenigsegg Closed Track & Alpine Rally Support',
-    kicker: 'Goodwood, Silverstone & European Passes',
-    tagline: 'Private circuit days and Swiss-to-Tuscany hypercar grand touring with chase van technicians.',
+    id: 'track-day-driving-tour',
+    category: 'Sport & Motoring',
+    title: 'Private Track Day & Grand Touring Weekend',
+    tagline: 'UK circuit sessions or European driving weekends with full support.',
     image: '/assets/aistudio/01_BUGATTI-SOC2022_6775a49f.jpg',
-    location: 'Silverstone / Goodwood / St Moritz to Como',
-    duration: 'Weekend / 48 Hours',
-    baseHours: 16,
-    baseDisbursement: 34000,
-    guidanceNote: 'Route reconnaissance includes road camber clearance checks and low-incline trailer staging throughout.',
+    location: 'UK Circuits & European Passes',
+    duration: 'Weekend',
+    defaultHours: 16,
+    guidanceNote: 'We coordinate circuit bookings, luggage vans, hotels and secure overnight parking.',
     deliverables: [
-      'Exclusive private circuit hire or Drivers’ Club Paddock accreditation',
-      'Mercedes Sprinter support chase vehicle carrying luggage & factory mechanics',
-      'Secured climate-controlled garage lockups at every overnight palazzo or hotel',
+      'Private circuit day or driving club booking with qualified instructors',
+      'Support vehicle for luggage along your chosen route',
+      'Country hotels and secure garages booked along the way',
     ],
   },
 
-  // 4. Aviation & Yachts
+  // 4. Travel & Sea
   {
-    id: 'aviation-florence-transfer',
-    category: 'Aviation & Yachts',
-    title: 'RAF Northolt Challenger 350 Charter to Florence Villa',
-    kicker: 'London to Tuscany',
-    tagline: '30-second apron handover from Rolls-Royce directly to Bombardier cabin stairs.',
+    id: 'london-tuscany-villa-escape',
+    category: 'Travel & Sea',
+    title: 'London to Tuscany Flight & Villa Stay',
+    tagline: 'Private flights arranged via licensed operators with a staffed Tuscan villa.',
     image: '/assets/aistudio/698157105b08bd0b828e954b_file_k95qb05z_c7bc7f74.png',
-    location: 'RAF Northolt (EGWU) to Florence (LIRQ)',
-    duration: '3 Days / 72 Hours',
-    baseHours: 24,
-    baseDisbursement: 42000,
-    guidanceNote: 'Specify RAF Northolt Gate 4 under Apron Handling for minimum road transit time from Mayfair or Belgravia.',
+    location: 'London to Florence & Tuscany',
+    duration: 'Long Weekend',
+    defaultHours: 24,
+    guidanceNote: 'Flights are operated by licensed independent operators. We align cars, villas and dining.',
     deliverables: [
-      'Bombardier Challenger 350 private charter with dedicated captain and flight steward',
-      'Pre-cleared diplomatic passport handling and customs clearance on tarmac',
-      'Florence private Renaissance palazzo villa staffed and fires lit before arrival',
-      'Helicopter transfer ready at Florence tarmac for Chianti vineyard landings',
+      'Private flight arranged through a licensed independent operator',
+      'Chauffeur transfers from your London door and in Italy',
+      'Private villa prepared ahead of arrival with local chef options',
     ],
   },
   {
-    id: 'monaco-port-hercule-berth',
-    category: 'Aviation & Yachts',
-    title: 'Port Hercule Trackside Superyacht & Nice Helipad Hop',
-    kicker: 'French Riviera & Principality',
-    tagline: 'Zone 1 Quay des États-Unis yacht mooring with 7-minute helicopter shuttles from Nice FBO.',
+    id: 'riviera-yacht-stay',
+    category: 'Travel & Sea',
+    title: 'Riviera Yacht Holiday & Coastal Dining',
+    tagline: 'Mediterranean yacht hire arranged via licensed brokers with coastal tables.',
     image: '/assets/aistudio/monaco_harbor_twilight_1794391696625.jpg',
-    location: 'Nice (LFMN) ➔ Port Hercule, Monaco',
-    duration: '4 Days / 96 Hours',
-    baseHours: 32,
-    baseDisbursement: 68000,
-    guidanceNote: 'Select DRC & Château Pétrus Library Vintages to ensure onboard sommelier cellar staging is verified prior to sailing.',
+    location: 'French Riviera & Monaco',
+    duration: 'Long Weekend',
+    defaultHours: 24,
+    guidanceNote: 'Yacht bookings are handled through licensed brokers, while we coordinate shore plans.',
     deliverables: [
-      '52m–60m Benetti or Lürssen trackside or outer harbor charter allocation',
-      'Guaranteed Monacair tarmac helicopter pad slot direct from private jet stairs',
-      'Private tender transfers and closed-door Monte Carlo beach club cabanas',
+      'Introduction to licensed yacht brokers for suitable vessels',
+      'Airport transfers and local helicopter hops where helpful',
+      'Harbour restaurants and beach club tables reserved ahead',
     ],
   },
   {
-    id: 'farnborough-static-jet-dispatch',
-    category: 'Aviation & Yachts',
-    title: 'TAG Farnborough Long-Range Dispatch & In-Flight Concierge',
-    kicker: 'Hampshire VIP Aviation Hangar',
-    tagline: 'Private hangar boarding on Global 7500 with custom Mayfair hot kitchen flight catering.',
+    id: 'long-haul-private-flight-support',
+    category: 'Travel & Sea',
+    title: 'International Flight & Ground Logistics',
+    tagline: 'End-to-end trip coordination for business or family travel overseas.',
     image: '/assets/aistudio/6a5e4f29ca98c820c85071cd_file_l7dpoy6z_91be91a5.png',
-    location: 'Farnborough Airport (EGLF) Hangar',
-    duration: '24-Hour Global Dispatch',
-    baseHours: 12,
-    baseDisbursement: 29000,
-    guidanceNote: 'High-altitude catering is specially reduced for clean flavor at 43,000ft cabin altitude.',
+    location: 'London & Worldwide',
+    duration: 'Multi-Day Trip',
+    defaultHours: 12,
+    guidanceNote: 'Flights are operated by licensed independent operators. One itinerary covers every leg.',
     deliverables: [
-      'Direct private car entry onto hangar apron directly beneath aircraft wing',
-      'Private customs & DEFRA pet cabin clearance inside isolated hangar lounge',
-      'Altitude-calibrated Mayfair private chef menu loaded 90 minutes pre-wheels-up',
+      'Private or commercial flight coordination with airport meet-and-assist',
+      'Hotel suites, connecting rooms and in-room check-in arranged',
+      'Trusted local chauffeurs ready at every destination',
     ],
   },
 
-  // 5. Estates & Gastronomy
+  // 5. Country & Dining
   {
-    id: 'cotswolds-manor-estate',
-    category: 'Estates & Gastronomy',
-    title: 'Cotswolds Historic Manor Shoot & Michelin Hearth Feast',
-    kicker: 'Oxfordshire & Cotswolds',
-    tagline: '3,000-acre private estate with dedicated gamekeepers and in-residence woodfire tasting menu.',
+    id: 'cotswolds-house-weekend',
+    category: 'Country & Dining',
+    title: 'Cotswolds Country House & Private Chef',
+    tagline: 'A staffed rural house in Oxfordshire or Gloucestershire for family weekends.',
     image: '/assets/aistudio/cotswolds_manor_estate.jpg',
-    location: 'Private Cotswolds Valley Estate',
-    duration: 'Weekend / 48 Hours',
-    baseHours: 16,
-    baseDisbursement: 28500,
-    guidanceNote: 'Pair with AgustaWestland AW109 helicopter transit to cut a 2.5-hour M40 drive down to 24 minutes from Battersea.',
+    location: 'Oxfordshire & Cotswolds',
+    duration: 'Weekend',
+    defaultHours: 16,
+    guidanceNote: 'We stock the house ahead of arrival and arrange local chefs and outdoor guides.',
     deliverables: [
-      'Full manor house buyout with live-in butler, sommelier, and estate staff',
-      'Clays and game field sports with certified master instructors and bespoke Purdey guns',
-      'Twin-engine Agusta 109 helicopter transfer from Battersea Heliport in 24 minutes',
-      'Evening hearth tasting menu prepared over applewood coals by Michelin guest chef',
+      'Private country house prepared with groceries, flowers and lit fires',
+      'Private chef booked for a seasonal weekend feast',
+      'Guided country walks or clay shooting with qualified instructors',
     ],
   },
   {
-    id: 'highland-stalking-lodge',
-    category: 'Estates & Gastronomy',
-    title: 'Perthshire Stone Estate, Salmon Beat & Single-Cask Tasting',
-    kicker: 'Scottish Highlands Sanctuary',
-    tagline: 'Private 14,000-acre stone lodge with ghillies, Speyside cask tastings, and helicopter pad.',
+    id: 'scottish-highlands-retreat',
+    category: 'Country & Dining',
+    title: 'Perthshire Estate & Distillery Visits',
+    tagline: 'A quiet Highland lodge with river fishing, local guides and whisky tastings.',
     image: '/assets/aistudio/highland_stone_estate_1794391698042.jpg',
-    location: 'Perthshire & Tay Valley, Scotland',
-    duration: '4 Days / 96 Hours',
-    baseHours: 24,
-    baseDisbursement: 38000,
-    guidanceNote: 'Combine Challenger 350 charter to Dundee or Inverness with lawn helicopter staging straight to the lochside lodge.',
+    location: 'Perthshire, Scotland',
+    duration: 'Long Weekend',
+    defaultHours: 24,
+    guidanceNote: 'We coordinate flights, estate transfers, local ghillies and distillery appointments.',
     deliverables: [
-      'Private Tay or Dee fishing beat with veteran estate ghillies and heated lunch bothy',
-      'Private Speyside distillery warehouse cask sampling of 40-year single malts',
-      'Live-in Highland kitchen brigade preparing estate venison, langoustines, and grouse',
+      'Private stone lodge stay arranged with full household prep',
+      'River fishing days with experienced local estate ghillies',
+      'Private distillery tastings booked across Speyside or Perthshire',
     ],
   },
   {
-    id: 'clandestine-hinoki-omakase',
-    category: 'Estates & Gastronomy',
-    title: 'Six-Seat Hinoki Counter Omakase & Smithfield Cellar Supper',
-    kicker: 'Private Counter Gastronomy',
-    tagline: 'Zero signage timber door leading to Tokyo-grade Edomae omakase or wood-fired Mayfair hearths.',
+    id: 'intimate-chef-counter-dinner',
+    category: 'Country & Dining',
+    title: 'Private Chef Counter & Wine Pairing',
+    tagline: 'Seats or a full buyout at an intimate London chef counter.',
     image: '/assets/aistudio/ginza_hinoki_omakase_1794391697612.jpg',
-    location: 'Marylebone / Clerkenwell Private Cellars',
-    duration: 'Evening (4 Hours)',
-    baseHours: 6,
-    baseDisbursement: 9800,
-    guidanceNote: 'All 6–10 counter seats are bought out exclusively for your party so conversation remains uninterrupted.',
+    location: 'Mayfair & Marylebone',
+    duration: 'Evening',
+    defaultHours: 4,
+    guidanceNote: 'Early notice helps us secure counter buyouts and note every dietary preference.',
     deliverables: [
-      'Complete exclusive counter buyout with air-freighted Toyosu tuna & Hokkaido sea urchin',
-      'Rare vintage Champagne, aged Junmai Daiginjo sake, and grand cru Burgundy flight',
-      'Private acoustic sweep prior to arrival for sensitive board or family conversation',
+      'Private chef counter reservation or full seating buyout',
+      'Tailored wine, sake or non-alcoholic pairing list',
+      'Discreet waiting car for door-to-door evening travel',
     ],
   },
 
-  // 6. Arts, Couture & Longevity
+  // 6. Culture & Wellness
   {
-    id: 'mayfair-sartorial-horology',
-    category: 'Arts, Couture & Longevity',
-    title: 'Savile Row In-Suite Cut & Archival Horology Vault',
-    kicker: 'Mayfair & St James’s',
-    tagline: 'Senior head cutter attendance in your residence paired with closed-door Patek & Rolex viewings.',
+    id: 'savile-row-watches-day',
+    category: 'Culture & Wellness',
+    title: 'Savile Row Fitting & Watch Viewing',
+    tagline: 'Private Mayfair tailoring appointments paired with quiet dealer watch viewings.',
     image: '/assets/aistudio/savile_row_bespoke.jpg',
-    location: '45 Albemarle Street & Eaton Square',
-    duration: '4–6 Hours',
-    baseHours: 6,
-    baseDisbursement: 9500,
-    guidanceNote: 'Our horological scholar attends with UV loupes and extract archives so provenance is verified on the drawing-room table.',
+    location: 'Mayfair & St James’s',
+    duration: 'Half Day',
+    defaultHours: 4,
+    guidanceNote: 'Ideal for a relaxed Mayfair afternoon built around your personal taste.',
     deliverables: [
-      'In-residence basted fitting with Huntsman or Anderson & Sheppard head cutter',
-      'Private viewings of provenance-verified vintage chronographs from private vault',
-      'Discreet white-glove packaging and home delivery with vault insurance',
+      'Private appointment arranged with a Savile Row tailoring house',
+      'Quiet watch viewing with a reputable London specialist dealer',
+      'Lunch booked nearby at a classic St James’s dining room',
     ],
   },
   {
-    id: 'royal-opera-frieze-patronage',
-    category: 'Arts, Couture & Longevity',
-    title: 'Royal Opera Grand Tier Box & Frieze Masters Night Unlock',
-    kicker: 'Covent Garden & Regent’s Park',
-    tagline: 'Box 12 private velvet drawing room at Covent Garden plus closed-curtain Old Bond Street salons.',
+    id: 'opera-gallery-evening',
+    category: 'Culture & Wellness',
+    title: 'Covent Garden Opera & Gallery Preview',
+    tagline: 'Private art viewings in Mayfair followed by an evening at the opera.',
     image: '/assets/aistudio/royal_opera_box_1794391694654.jpg',
-    location: 'Bow Street & Old Bond Street',
-    duration: 'Full Cultural Day & Evening',
-    baseHours: 8,
-    baseDisbursement: 15000,
-    guidanceNote: 'Rolls-Royce Phantom VIII Extended awaits at the private Bow Street portico rather than public Piazza queues.',
+    location: 'Mayfair & Covent Garden',
+    duration: 'Afternoon & Evening',
+    defaultHours: 8,
+    guidanceNote: 'We align gallery appointments, pre-theatre drinks and interval hospitality cleanly.',
     deliverables: [
-      'Grand Tier private box with dedicated interval salon, chilled Krug, and programme concierge',
-      'Closed-door afternoon viewing at Frieze pavilion or Old Bond Street jewellery vault',
-      'Post-curtain introduction to orchestra conductor or senior gallery director',
+      'Private afternoon appointments with London galleries or art advisers',
+      'Opera seats or box hospitality arranged subject to availability',
+      'Chauffeur transfers timed cleanly for curtain-up and departure',
     ],
   },
   {
-    id: 'harley-longevity-diagnostics',
-    category: 'Arts, Couture & Longevity',
-    title: 'Harley Street Executive Diagnostics & Private Wellness Suite',
-    kicker: 'Marylebone Clinical Privacy',
-    tagline: 'Same-day private imaging, cellular longevity briefing, and in-residence restorative osteopathy.',
+    id: 'wellness-recovery-day',
+    category: 'Culture & Wellness',
+    title: 'London Wellness Appointments & Spa Day',
+    tagline: 'Private clinic scheduling, physiotherapy and restorative spa stays in London.',
     image: '/assets/aistudio/harley_medical_suite_1794391696088.jpg',
-    location: 'Harley Street Private Wing, W1G',
-    duration: 'Half Day (4 Hours)',
-    baseHours: 6,
-    baseDisbursement: 7800,
-    guidanceNote: 'Side-door clinician admission guarantees zero waiting-room crossover with any other patient.',
+    location: 'Marylebone & Mayfair',
+    duration: 'Half Day',
+    defaultHours: 4,
+    guidanceNote: 'We do not give medical advice; we help arrange appointments with qualified professionals.',
     deliverables: [
-      'Direct private courtyard access to senior diagnostic radiology & consultant suite',
-      'Pseudonym chart administration settled cleanly through TGLC billing firewall',
-      'Follow-up recovery protocol delivered in-residence by physiotherapy specialists',
+      'Private appointment scheduling with qualified clinics or therapists',
+      'Quiet hotel spa suite booked for afternoon rest',
+      'Chauffeur transfers timed gently around your diary',
     ],
   },
 ];
 
-const PREBUILT_BLUEPRINTS: PrebuiltBlueprint[] = [
+const SAMPLE_BRIEFS: SampleBrief[] = [
   {
-    id: 'bp-urban-dj',
-    title: 'Mayfair-to-Vauxhall Urban Sound Buyout',
-    badge: 'Edgy Nocturne · DJ & Hip-Hop',
-    summary: 'Satin-Black Maybach back-alley arrival to a concrete bass vault booth with touring DJs & Tier 2 protection.',
-    rationale: 'Built for principals wanting raw, authentic hip-hop and underground vinyl culture at 02:00 without paparazzi or door queues. Satin-black Maybach + Tier 2 close protection keeps street transition silent and effortless.',
+    id: 'brief-late-music',
+    title: 'Mayfair Dinner & Late Vinyl Club',
+    badge: 'Nightlife & Music',
+    summary: 'Quiet dinner in Mayfair followed by a private booth and waiting chauffeur.',
+    rationale: 'Designed for guests who want great late-night music in London without door stress or hurried travel.',
     image: '/assets/aistudio/urban_hiphop_club_1794391691841.jpg',
-    scenarioId: 'urban-hiphop-concrete-vault',
-    fleetId: 'maybach-s680',
-    protocolId: 'close-protection',
-    armourId: 'b6',
-    apronId: 'battersea',
-    cellarId: 'drc-petrus',
-    staffingId: 'concierge-lead',
-    hours: 8,
-    codename: 'NOCTURNE-BASS-09',
-    departurePoint: 'Connaught Mews Private Courtyard, Mayfair W1K',
-    guestCount: '4 Principals + Recording Artist Guest',
-    targetDate: 'Saturday, 28 November 2026',
-    cellarDietary: 'Krug Grande Cuvée magnums, Aged Yamazaki, Faraday phone pouches at booth entry.',
+    planId: 'late-night-sound-room',
+    transportId: 'mercedes-maybach',
+    privacyId: 'discreet-coordination',
+    vehicleStyleId: 'saloon-privacy',
+    arrivalId: 'door-to-door',
+    hospitalityId: 'fine-wine-champagne',
+    supportId: 'lifestyle-manager',
+    hours: 6,
+    referenceLabel: 'MAYFAIR-LATE',
+    departurePoint: 'Mayfair, London W1',
+    guestCount: '4 guests',
+    targetDate: 'Saturday evening',
+    notes: 'Quiet dinner table first, then late music booth and waiting car.',
   },
   {
-    id: 'bp-subrosa-007',
-    title: '007 Thames Stealth & Bank Bullion Vault',
-    badge: 'Clandestine · River & Vaults',
-    summary: '45ft matte-black interceptor under Tower Bridge into a 300-year bullion chamber under Faraday shield.',
-    rationale: 'Connects high-speed river adrenalin with total acoustic privacy 35ft underground—avoiding West End gridlock and insuring confidential principals remain completely off-grid.',
+    id: 'brief-thames-cellar',
+    title: 'Thames Evening Cruise & Vault Dinner',
+    badge: 'Historic London',
+    summary: 'A licensed evening boat cruise followed by candlelit dining in the City.',
+    rationale: 'Pairs a calm river journey past floodlit bridges with private dining in a historic London cellar.',
     image: '/assets/aistudio/hidden_nocturne_stealth_boat_1794295325076.jpg',
-    scenarioId: 'sub-rosa-thames-vault',
-    fleetId: 'stealth-boat',
-    protocolId: 'faraday-rf-shield',
-    armourId: 'standard',
-    apronId: 'thames-pier',
-    cellarId: 'pre-embargo',
-    staffingId: 'michelin-brigade',
-    hours: 8,
-    codename: 'THAMES-CIPHER-07',
-    departurePoint: 'Private Chelsea Pier Key Gate, SW3',
-    guestCount: '6 Principals (Private Council)',
-    targetDate: 'Thursday, 3 December 2026',
-    cellarDietary: '6-course wild game & truffle cellar menu, pre-1900 Bas Armagnac, full RF sweep.',
+    planId: 'thames-cruise-vault-dinner',
+    transportId: 'river-launch',
+    privacyId: 'private-hosting',
+    vehicleStyleId: 'saloon-privacy',
+    arrivalId: 'thames-pier',
+    hospitalityId: 'fine-wine-champagne',
+    supportId: 'private-chef-team',
+    hours: 6,
+    referenceLabel: 'THAMES-EVENING',
+    departurePoint: 'Chelsea or Westminster Pier',
+    guestCount: '6 guests',
+    targetDate: 'Thursday evening',
+    notes: 'Seasonal tasting menu, classic Burgundy pairings and return chauffeurs.',
   },
   {
-    id: 'bp-combat-soho',
-    title: 'Bermondsey Arch Fight Night & Jazz Snug',
-    badge: 'Raw Boxing · Close Protection',
-    summary: 'Armoured B6 Range Rover to Victorian railway arch boxing followed by late-night Soho whisky.',
-    rationale: 'Raw unsanctioned exhibition boxing demands disciplined perimeter control. Our Tier 2 Close Protection detail handles advance sweeps around industrial Bermondsey arches and clean vehicle extraction.',
+    id: 'brief-fight-night',
+    title: 'London Fight Night & Late Supper',
+    badge: 'Sport & Motoring',
+    summary: 'Ringside seats at a licensed arena bout with dinner and return cars.',
+    rationale: 'Keeps a busy arena evening smooth with early dining, hosted seating and a driver ready outside.',
     image: '/assets/aistudio/east_end_boxing_1794391694652.jpg',
-    scenarioId: 'underground-combat-bermondsey',
-    fleetId: 'range-rover-armoured',
-    protocolId: 'close-protection',
-    armourId: 'b6',
-    apronId: 'thames-pier',
-    cellarId: 'pre-embargo',
-    staffingId: 'concierge-lead',
-    hours: 10,
-    codename: 'IRON-ARCH-SE16',
-    departurePoint: 'Eaton Square Residence, Belgravia SW1W',
-    guestCount: '3 Principals',
-    targetDate: 'Friday, 4 December 2026',
-    cellarDietary: 'Beluga caviar bumps & Karuizawa Japanese whisky ringside; unbranded egress.',
+    planId: 'arena-fight-night-hospitality',
+    transportId: 'range-rover-chauffeur',
+    privacyId: 'licensed-security-referral',
+    vehicleStyleId: 'suv-comfort',
+    arrivalId: 'door-to-door',
+    hospitalityId: 'sommelier-selection',
+    supportId: 'lifestyle-manager',
+    hours: 6,
+    referenceLabel: 'LONDON-RINGSIDE',
+    departurePoint: 'Belgravia, London SW1',
+    guestCount: '4 guests',
+    targetDate: 'Friday evening',
+    notes: 'Pre-fight dinner nearby and calm departure after the main event.',
   },
   {
-    id: 'bp-monaco-jet',
-    title: 'RAF Northolt Jet to Monaco Port Hercule',
-    badge: 'Aviation · Superyacht',
-    summary: 'Challenger 350 direct off Gate 4 diplomatic apron to Port Hercule trackside berth & helipad hop.',
-    rationale: 'Pairing RAF Northolt Gate 4 with Challenger 350 and DRC cellar provisioning compresses Mayfair-to-Monaco yacht embarkation to under three hours door-to-aft-deck.',
+    id: 'brief-riviera-escape',
+    title: 'London to Riviera Yacht Weekend',
+    badge: 'Travel & Sea',
+    summary: 'Private flight via licensed operators paired with coastal yacht cruising.',
+    rationale: 'Connects flight timings, airport transfers and harbour tables into one simple family itinerary.',
     image: '/assets/aistudio/monaco_harbor_twilight_1794391696625.jpg',
-    scenarioId: 'monaco-port-hercule-berth',
-    fleetId: 'challenger-350',
-    protocolId: 'shielded-billing',
-    armourId: 'standard',
-    apronId: 'raf-northolt',
-    cellarId: 'drc-petrus',
-    staffingId: 'royal-butler',
-    hours: 32,
-    codename: 'HERCULE-GOLD-01',
-    departurePoint: 'RAF Northolt Gate 4 Diplomatic Apron',
-    guestCount: '8 Family Principals & Household Staff',
-    targetDate: 'Thursday, 20 May 2027',
-    cellarDietary: 'La Tâche 2012 decanted onboard; altitude-calibrated seafood menu.',
-  },
-  {
-    id: 'bp-highland-heli',
-    title: 'Twin-Turbine Helicopter to Perthshire Estate',
-    badge: 'Estates · Aviation',
-    summary: 'AgustaWestland AW109 turbine departure direct to a 14,000-acre Scottish stone estate and salmon beat.',
-    rationale: 'Direct lawn touchdown removes all regional road transfers; live-in butler and estate brigade light hearths and prepare single-cask warehouse tastings 48 hours ahead.',
-    image: '/assets/aistudio/highland_stone_estate_1794391698042.jpg',
-    scenarioId: 'highland-stalking-lodge',
-    fleetId: 'aw109-helicopter',
-    protocolId: 'covert-diplomatic',
-    armourId: 'standard',
-    apronId: 'battersea',
-    cellarId: 'curated-cellar',
-    staffingId: 'royal-butler',
+    planId: 'riviera-yacht-stay',
+    transportId: 'private-jet-operator',
+    privacyId: 'discreet-coordination',
+    vehicleStyleId: 'saloon-privacy',
+    arrivalId: 'private-terminal',
+    hospitalityId: 'fine-wine-champagne',
+    supportId: 'household-support',
     hours: 24,
-    codename: 'TAY-SANCTUARY',
-    departurePoint: 'London Heliport, Bridges Court Battersea SW11',
-    guestCount: '4 Principals + Estate Ghillie Party',
-    targetDate: 'Friday, 15 January 2027',
-    cellarDietary: 'Speyside 40yr single cask tasting, estate grouse & Tay salmon.',
+    referenceLabel: 'RIVIERA-SEA',
+    departurePoint: 'London to Nice',
+    guestCount: '6 family guests',
+    targetDate: 'Summer long weekend',
+    notes: 'Balanced guest cabins, light Mediterranean menus and tender transfers.',
   },
   {
-    id: 'bp-opera-frieze',
-    title: 'Royal Opera Box 12 & Old Bond St Unlock',
-    badge: 'High Culture · Mayfair',
-    summary: 'Phantom VIII Extended arrival at Frieze VIP preview followed by Grand Tier Box 12 at Covent Garden.',
-    rationale: 'Combines quiet Bond Street gemmology or Regent’s Park art acquisition with Covent Garden acoustic perfection—handled via Bow Street stage portico rather than Piazza crowds.',
+    id: 'brief-highland-stay',
+    title: 'Perthshire Estate & Country Break',
+    badge: 'Country & Dining',
+    summary: 'A quiet Highland lodge weekend with fishing, walks and distillery visits.',
+    rationale: 'Prepares the house before you arrive so the entire trip feels calm from the first evening.',
+    image: '/assets/aistudio/highland_stone_estate_1794391698042.jpg',
+    planId: 'scottish-highlands-retreat',
+    transportId: 'helicopter-operator',
+    privacyId: 'discreet-coordination',
+    vehicleStyleId: 'suv-comfort',
+    arrivalId: 'regional-heliport',
+    hospitalityId: 'sommelier-selection',
+    supportId: 'household-support',
+    hours: 24,
+    referenceLabel: 'HIGHLAND-STAY',
+    departurePoint: 'London to Perthshire',
+    guestCount: '4 guests',
+    targetDate: 'Autumn weekend',
+    notes: 'Estate kitchen stocked ahead, local ghillie booked and fires lit.',
+  },
+  {
+    id: 'brief-opera-gallery',
+    title: 'Mayfair Galleries & Covent Garden Opera',
+    badge: 'Culture & Wellness',
+    summary: 'Afternoon gallery viewings followed by an evening box at Covent Garden.',
+    rationale: 'Combines quiet Bond Street appointments with unhurried interval hospitality and chauffeur transfers.',
     image: '/assets/aistudio/royal_opera_box_1794391694654.jpg',
-    scenarioId: 'royal-opera-frieze-patronage',
-    fleetId: 'rolls-phantom',
-    protocolId: 'covert-diplomatic',
-    armourId: 'standard',
-    apronId: 'farnborough',
-    cellarId: 'curated-cellar',
-    staffingId: 'concierge-lead',
+    planId: 'opera-gallery-evening',
+    transportId: 'rolls-royce-phantom',
+    privacyId: 'discreet-coordination',
+    vehicleStyleId: 'saloon-privacy',
+    arrivalId: 'door-to-door',
+    hospitalityId: 'fine-wine-champagne',
+    supportId: 'lifestyle-manager',
     hours: 8,
-    codename: 'COVENT-GRANDTIER',
-    departurePoint: '45 Albemarle Street, Mayfair W1S 4JL',
-    guestCount: '4 Principals',
-    targetDate: 'Thursday, 10 December 2026',
-    cellarDietary: 'Comtes de Champagne interval pour in Box 12 private drawing room.',
+    referenceLabel: 'COVENT-GARDEN',
+    departurePoint: 'Mayfair, London W1',
+    guestCount: '4 guests',
+    targetDate: 'Thursday evening',
+    notes: 'Afternoon art viewing, chilled champagne at the interval and late supper.',
   },
 ];
 
-const FLEET_OPTIONS = [
+const TRANSPORT_OPTIONS = [
   {
-    id: 'maybach-s680',
-    name: 'Mercedes-Maybach S680 Satin Stealth',
-    type: 'Nocturne Alley & Club Extraction',
-    category: 'Tactical / Urban',
-    hourlyCost: 340,
-    desc: 'Matte obsidian finish, electro-chromatic rear privacy glass, acoustic lounge seats for late-night club & Soho mews arrivals.',
+    id: 'mercedes-maybach',
+    name: 'Mercedes-Maybach S-Class Chauffeur',
+    type: 'City Chauffeur',
+    category: 'Road',
+    desc: 'Quiet saloon with rear privacy glass for smooth Mayfair and West End evenings.',
     image: '/assets/aistudio/mayfair_alley_arrival_1794391693142.jpg',
   },
   {
-    id: 'rolls-cullinan',
-    name: 'Rolls-Royce Cullinan Series II',
-    type: 'High-Ground Luxury Sanctuary',
-    category: 'Chauffeur',
-    hourlyCost: 280,
-    desc: 'Bespoke shooting kit, dual champagne cooler, deep lambswool carpets, discrete privacy glass.',
+    id: 'rolls-royce-cullinan',
+    name: 'Rolls-Royce Cullinan Chauffeur',
+    type: 'Luxury SUV',
+    category: 'Road',
+    desc: 'Spacious high-riding comfort suited to both central London and country drives.',
     image: '/assets/aistudio/rolls-cullian-featured_a41abfa9.webp',
   },
   {
-    id: 'rolls-phantom',
-    name: 'Rolls-Royce Phantom VIII Extended',
-    type: 'The Sovereign Flagship',
-    category: 'Chauffeur',
-    hourlyCost: 320,
-    desc: 'Acoustic privacy partition, starlight headliner, electro-tint rear glass, unhurried Mayfair transit.',
+    id: 'rolls-royce-phantom',
+    name: 'Rolls-Royce Phantom Chauffeur',
+    type: 'Formal Saloon',
+    category: 'Road',
+    desc: 'Unhurried comfort for opera nights, formal dinners and gallery evenings.',
     image: '/assets/aistudio/rolls-royce-cullinan-chauffeur-service-events_d3e6e421.webp',
   },
   {
-    id: 'range-rover-armoured',
-    name: 'Range Rover SV Intrepid (Armoured B6)',
-    type: 'Ballistic Tactical Discretion',
-    category: 'Tactical',
-    hourlyCost: 450,
-    desc: 'Certified ballistic glass, run-flat tyres, floor blast protection, covert tactical communications.',
+    id: 'range-rover-chauffeur',
+    name: 'Range Rover Long Wheelbase',
+    type: 'Executive SUV',
+    category: 'Road',
+    desc: 'Understated British comfort for busy London venues, airports and country weekends.',
     image: '/assets/aistudio/best-luxury-cars-2024_ab87bb7b.webp',
   },
   {
-    id: 'luxury-sprinter-jetvan',
-    name: 'Mercedes-Benz VIP Sprinter JetVan',
-    type: 'Executive Mobile Command Suite',
-    category: 'Tactical',
-    hourlyCost: 380,
-    desc: 'Four reclining first-class sleeper seats, encrypted satellite Wi-Fi, wardrobe, and onboard refreshment galley.',
+    id: 'mercedes-v-class-sprinter',
+    name: 'Executive VIP Sprinter',
+    type: 'Group Lounge Vehicle',
+    category: 'Road',
+    desc: 'Spacious cabin seating for families, luggage and small teams travelling together.',
     image: '/assets/aistudio/luxury_sprinter_jetvan.jpg',
   },
   {
-    id: 'stealth-boat',
-    name: '45ft Nocturne Matte-Black Thames Interceptor',
-    type: 'River Stealth Interceptor',
-    category: 'Maritime',
-    hourlyCost: 850,
-    desc: 'Twin Mercury Racing outboards, FLIR thermal night optics, PLA cleared 40kt transit, heated teak deck.',
+    id: 'river-launch',
+    name: 'Private Thames River Launch',
+    type: 'Licensed River Boat',
+    category: 'River',
+    desc: 'Private evening boat crossings along the Thames with a licensed local skipper.',
     image: '/assets/aistudio/hidden_nocturne_stealth_boat_1794295325076.jpg',
   },
   {
-    id: 'aw109-helicopter',
-    name: 'AgustaWestland AW109 GrandNew',
-    type: 'Twin-Turbine Rotorcraft',
-    category: 'Aviation',
-    hourlyCost: 2800,
-    desc: '24-minute Mayfair/Battersea to Oxfordshire estates, VIP leather club cabin, instrument night-flight certified.',
+    id: 'helicopter-operator',
+    name: 'Helicopter Transfer (Licensed Operator)',
+    type: 'Rotorcraft',
+    category: 'Air',
+    desc: 'Countryside and coastal transfers arranged through licensed independent operators.',
     image: '/assets/aistudio/6a5e4f29ca98c820c85071cd_file_l7dpoy6z_91be91a5.png',
   },
   {
-    id: 'challenger-350',
-    name: 'Bombardier Challenger 350',
-    type: 'Super-Midsize Private Jet',
-    category: 'Aviation',
-    hourlyCost: 4200,
-    desc: 'Ten-passenger stand-up cabin, flat-floor design, KA-band high-speed connectivity, London City cleared.',
+    id: 'private-jet-operator',
+    name: 'Private Jet (Licensed Operator)',
+    type: 'Private Aviation',
+    category: 'Air',
+    desc: 'European and international flights arranged through licensed independent operators.',
     image: '/assets/aistudio/698157105b08bd0b828e954b_file_k95qb05z_c7bc7f74.png',
   },
 ];
 
-const SECURITY_PROTOCOLS = [
+const PRIVACY_OPTIONS = [
   {
-    id: 'covert-diplomatic',
-    name: 'Covert Diplomatic Discretion',
-    desc: 'Need-to-know operational authority, unmarked vehicles, zero digital telemetry, plainclothes advance.',
-    level: 'Tier 1 Standard',
-    costPerHour: 95,
+    id: 'discreet-coordination',
+    name: 'Standard Discreet Coordination',
+    desc: 'Bookings handled privately through our Mayfair office, sharing only necessary guest details.',
+    level: 'Standard',
   },
   {
-    id: 'close-protection',
-    name: 'Dedicated Close Protection Detail (TGLC Security Desk)',
-    desc: 'Two SIA-licensed protection officers with British Special Forces background, counter-surveillance.',
-    level: 'Tier 2 Tactical',
-    costPerHour: 220,
+    id: 'private-hosting',
+    name: 'Private Room & Quiet Arrivals',
+    desc: 'Side entrances, private dining rooms and timed chauffeur pick-ups arranged with venues.',
+    level: 'Enhanced Privacy',
   },
   {
-    id: 'faraday-rf-shield',
-    name: 'RF Faraday Enclosure & Anti-Surveillance',
-    desc: 'Full electronic sweep of private meeting enclaves, sealed device lockboxes, RF jamming in transit.',
-    level: 'Tier 3 Classified',
-    costPerHour: 340,
+    id: 'licensed-security-referral',
+    name: 'Licensed Security Specialist Introduction',
+    desc: 'Security services are provided by licensed independent specialists for high-profile events.',
+    level: 'Specialist Support',
   },
   {
-    id: 'shielded-billing',
-    name: 'Shielded Family Office Billing & Escort',
-    desc: 'Confidential ledger invoicing via anonymised trust accounts without merchant logs, armed lead scout.',
-    level: 'Fiscal & Tactical',
-    costPerHour: 480,
+    id: 'assistant-liaison',
+    name: 'Private Office & Assistant Coordination',
+    desc: 'We work directly alongside your PA or family office with one clear written summary.',
+    level: 'Family Office',
   },
 ];
 
-const SPEC_OPTIONS = {
-  armourLevels: [
-    { id: 'standard', name: 'Standard Discreet Tint', adder: 0 },
-    { id: 'b6', name: 'VPAM B6 Ballistic & Blast Floor', adder: 850 },
-    { id: 'vr10', name: 'VR10 Heavy Military Ballistic & Run-Flat', adder: 1600 },
+const PREFERENCE_OPTIONS = {
+  vehicleStyles: [
+    { id: 'saloon-privacy', name: 'Quiet Saloon with Privacy Glass' },
+    { id: 'suv-comfort', name: 'Long-Wheelbase SUV Comfort' },
+    { id: 'group-mpv', name: 'Spacious Group & Luggage Vehicle' },
   ],
-  apronHandling: [
-    { id: 'raf-northolt', name: 'RAF Northolt Gate 4 Diplomatic Apron', adder: 1200 },
-    { id: 'farnborough', name: 'TAG Farnborough VIP Lounge & Apron Transfer', adder: 950 },
-    { id: 'battersea', name: 'Battersea London Heliport VIP Gate', adder: 650 },
-    { id: 'thames-pier', name: 'Private Pier Key (Chelsea / Tower Pier)', adder: 500 },
+  arrivalPoints: [
+    { id: 'door-to-door', name: 'Door-to-Door London Chauffeur' },
+    { id: 'private-terminal', name: 'Private Aviation Terminal Transfer' },
+    { id: 'regional-heliport', name: 'London Heliport Coordination' },
+    { id: 'thames-pier', name: 'Central London River Pier' },
   ],
-  sommelierAllocations: [
-    { id: 'curated-cellar', name: 'Curated Grand Cru Burgundy & Champagne', adder: 1500 },
-    { id: 'drc-petrus', name: 'DRC & Château Pétrus Library Vintages', adder: 6500 },
-    { id: 'pre-embargo', name: 'Pre-1900 Cognac & Pre-Embargo Havanas', adder: 4200 },
-    { id: 'none', name: 'Principal’s Own Cellar Transported', adder: 250 },
+  hospitalityStyles: [
+    { id: 'fine-wine-champagne', name: 'Fine Wine & Champagne Selection' },
+    { id: 'sommelier-selection', name: 'Sommelier-Guided Pairing List' },
+    { id: 'non-alcoholic', name: 'Zero-Proof & Botanical Pairings' },
+    { id: 'own-cellar', name: 'Bring Your Own Bottles (Corkage Agreed)' },
   ],
-  householdStaffing: [
-    { id: 'concierge-lead', name: 'Dedicated Steward & Private Office Manager (Leance Djedje)', adder: 0 },
-    { id: 'michelin-brigade', name: 'Michelin-Trained Private Chef & Sommelier Brigade', adder: 2400 },
-    { id: 'royal-butler', name: 'English Live-in Butler & Valet Service', adder: 1200 },
+  supportLevels: [
+    { id: 'lifestyle-manager', name: 'Dedicated Lifestyle Manager' },
+    { id: 'private-chef-team', name: 'Private Chef & Waiting Staff' },
+    { id: 'household-support', name: 'Pre-Arrival House Preparation' },
   ],
 };
 
-const TACTICAL_ADDONS = [
+const OPTIONAL_ENHANCEMENTS = [
   {
-    id: 'faraday-kit',
-    title: 'Faraday RF Device Isolation Pouches & Sweep',
-    detail: 'Signal-shielded leather pouches for all party phones plus sweeps across dining salons and sound booths.',
-    cost: 650,
+    id: 'advance-venue-check',
+    title: 'Advance Venue & Seating Check',
+    detail: 'We confirm table placement, quiet entrances and timing with each venue ahead.',
   },
   {
-    id: 'scout-convoy',
-    title: 'Dual-Lane Advance Route Scout Car',
-    detail: 'Plainclothes reconnaissance vehicle clears alleyway access and alternate exfiltration routes 10 minutes ahead.',
-    cost: 1200,
+    id: 'luggage-transfer',
+    title: 'Separate Luggage Transfer',
+    detail: 'Bags are collected early and placed in your hotel or country house before arrival.',
   },
   {
-    id: 'alias-settlement',
-    title: 'Diplomatic Alias & Escrow Settlement Shield',
-    detail: 'All third-party venue holds and FBO passenger manifests issued strictly under institutional corporate trust.',
-    cost: 850,
+    id: 'assistant-itinerary',
+    title: 'Shared Family or PA Itinerary',
+    detail: 'One clear schedule with addresses, timings and driver details for everyone involved.',
   },
   {
-    id: 'pre-decant-cellar',
-    title: '48-Hour Vintage Decanting & Glassware Staging',
-    detail: 'Master Sommelier stands library bottles upright 48 hours ahead and supplies hand-blown Zalto stemware.',
-    cost: 450,
+    id: 'wine-pre-order',
+    title: 'Advance Wine & Menu Pre-Order',
+    detail: 'Dietary notes and chosen bottles are shared with the kitchen before your evening.',
   },
 ];
 
-const OPERATIONAL_ROADMAP = [
-  { phase: 'T-72h', title: 'Advance Reconnaissance', desc: 'Mobility & Protection unit conducts route drive, venue keyholder check, and acoustic sweep.' },
-  { phase: 'T-24h', title: 'Logistics & Apron Lock', desc: 'Flight plans filed, apron security passes pre-cleared, rare vintages decanted to cellar vault.' },
-  { phase: 'T-2h', title: 'Lead Scout Staging', desc: 'Chase car checks route traffic; vehicle air filters engaged; primary vehicle staged at residence.' },
-  { phase: 'T-0h', title: 'Flawless Execution', desc: 'Direct encrypted radio link between lead driver, principal security escort, and Mayfair duty desk.' },
-  { phase: 'T+2h', title: 'Post-Mission Protocol', desc: 'Confidential ledger reconciliation, vault storage of acquisitions, and encrypted mission report.' },
+const PLANNING_STAGES = [
+  { phase: 'Stage 1', title: 'Initial Brief', desc: 'Share dates, group size, preferences and any must-have stops.' },
+  { phase: 'Stage 2', title: 'Options & Availability', desc: 'We check venues, operators and timings and send honest options.' },
+  { phase: 'Stage 3', title: 'Confirmations', desc: 'Once you approve, we lock in bookings and supplier details.' },
+  { phase: 'Stage 4', title: 'Final Schedule', desc: 'You receive one tidy itinerary with driver and venue contacts.' },
+  { phase: 'Stage 5', title: 'On-the-Day Support', desc: 'Your lifestyle manager stays on hand if timings shift.' },
 ];
 
 export const CommissionStudio: React.FC = () => {
-  const { navigateTo, openIntroductionModal } = useNavigation();
+  const { openIntroductionModal } = useNavigation();
 
   const [currentStep, setCurrentStep] = useState(0);
-  const [scenarioFilter, setScenarioFilter] = useState<ScenarioCategory>('All');
-  const [activeBlueprintId, setActiveBlueprintId] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<PlanCategory>('All');
+  const [activeBriefId, setActiveBriefId] = useState<string | null>(null);
 
-  const [selectedScenario, setSelectedScenario] = useState<CommissionScenario>(SCENARIOS[0]);
-  const [selectedFleet, setSelectedFleet] = useState(FLEET_OPTIONS[0]);
-  const [selectedProtocol, setSelectedProtocol] = useState(SECURITY_PROTOCOLS[1]);
+  const [selectedPlan, setSelectedPlan] = useState<StudioPlan>(STUDIO_PLANS[0]);
+  const [selectedTransport, setSelectedTransport] = useState(TRANSPORT_OPTIONS[0]);
+  const [selectedPrivacy, setSelectedPrivacy] = useState(PRIVACY_OPTIONS[0]);
 
-  // Tactical specifications
-  const [armourLevel, setArmourLevel] = useState(SPEC_OPTIONS.armourLevels[1]);
-  const [apronHandling, setApronHandling] = useState(SPEC_OPTIONS.apronHandling[0]);
-  const [cellarAlloc, setCellarAlloc] = useState(SPEC_OPTIONS.sommelierAllocations[0]);
-  const [staffing, setStaffing] = useState(SPEC_OPTIONS.householdStaffing[0]);
+  // Practical preferences
+  const [vehicleStyle, setVehicleStyle] = useState(PREFERENCE_OPTIONS.vehicleStyles[0]);
+  const [arrivalPoint, setArrivalPoint] = useState(PREFERENCE_OPTIONS.arrivalPoints[0]);
+  const [hospitalityStyle, setHospitalityStyle] = useState(PREFERENCE_OPTIONS.hospitalityStyles[0]);
+  const [supportLevel, setSupportLevel] = useState(PREFERENCE_OPTIONS.supportLevels[0]);
 
-  // Interactive Tactical Add-Ons & Bottom Execution Checklist
-  const [selectedAddons, setSelectedAddons] = useState<string[]>(['faraday-kit', 'alias-settlement']);
-  const [checkedPhases, setCheckedPhases] = useState<string[]>(['T-72h', 'T-24h']);
+  // Enhancements & planning checklist
+  const [selectedEnhancements, setSelectedEnhancements] = useState<string[]>([
+    'advance-venue-check',
+    'assistant-itinerary',
+  ]);
+  const [checkedStages, setCheckedStages] = useState<string[]>(['Stage 1', 'Stage 2']);
 
   // Schedule & details
-  const [departurePoint, setDeparturePoint] = useState('Eaton Square Residence, Belgravia, London SW1W');
-  const [guestCount, setGuestCount] = useState('2 Principals + 2 Guests');
-  const [targetDate, setTargetDate] = useState('Saturday, 28 November 2026');
-  const [cellarDietary, setCellarDietary] = useState('Krug Grande Cuvée magnums, Faraday phone pouches at booth entry, clean loading court egress.');
-  const [codename, setCodename] = useState('NOCTURNE-RESOLUTE');
+  const [departurePoint, setDeparturePoint] = useState('Mayfair, London W1');
+  const [guestCount, setGuestCount] = useState('2 to 4 guests');
+  const [targetDate, setTargetDate] = useState('Next month (flexible)');
+  const [notes, setNotes] = useState('Quiet table away from the door, waiting car after dinner.');
+  const [referenceLabel, setReferenceLabel] = useState('LONDON-PLAN');
 
-  const [retainedHours, setRetainedHours] = useState(selectedScenario.baseHours);
-  const [dossierSerial] = useState(() => Math.floor(1000 + Math.random() * 9000));
+  const [estimatedHours, setEstimatedHours] = useState(selectedPlan.defaultHours);
+  const [briefSerial, setBriefSerial] = useState<number>(4821);
+
+  useEffect(() => {
+    setBriefSerial(Math.floor(1000 + Math.random() * 9000));
+  }, []);
 
   const [isCopied, setIsCopied] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
-  const [isTransmitting, setIsTransmitting] = useState(false);
-  const [isTransmitted, setIsTransmitted] = useState(false);
-  const [generatedMandateId, setGeneratedMandateId] = useState('');
+  const [isPreparing, setIsPreparing] = useState(false);
+  const [isPrepared, setIsPrepared] = useState(false);
+  const [generatedBriefId, setGeneratedBriefId] = useState('');
 
-  const activeBlueprint = PREBUILT_BLUEPRINTS.find((b) => b.id === activeBlueprintId) || null;
+  const activeSampleBrief = SAMPLE_BRIEFS.find((b) => b.id === activeBriefId) || null;
 
-  const toggleAddon = (id: string) => {
-    setSelectedAddons((prev) =>
+  const toggleEnhancement = (id: string) => {
+    setSelectedEnhancements((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
-  const togglePhaseCheck = (phase: string) => {
-    setCheckedPhases((prev) =>
+  const toggleStageCheck = (phase: string) => {
+    setCheckedStages((prev) =>
       prev.includes(phase) ? prev.filter((p) => p !== phase) : [...prev, phase]
     );
   };
 
-  const filteredScenarios =
-    scenarioFilter === 'All'
-      ? SCENARIOS
-      : SCENARIOS.filter((s) => s.category === scenarioFilter);
+  const filteredPlans =
+    categoryFilter === 'All'
+      ? STUDIO_PLANS
+      : STUDIO_PLANS.filter((p) => p.category === categoryFilter);
 
-  const applyBlueprint = (bp: PrebuiltBlueprint) => {
-    const sc = SCENARIOS.find((s) => s.id === bp.scenarioId) || SCENARIOS[0];
-    const fl = FLEET_OPTIONS.find((f) => f.id === bp.fleetId) || FLEET_OPTIONS[0];
-    const pr = SECURITY_PROTOCOLS.find((p) => p.id === bp.protocolId) || SECURITY_PROTOCOLS[1];
-    const ar = SPEC_OPTIONS.armourLevels.find((a) => a.id === bp.armourId) || SPEC_OPTIONS.armourLevels[0];
-    const ap = SPEC_OPTIONS.apronHandling.find((g) => g.id === bp.apronId) || SPEC_OPTIONS.apronHandling[0];
-    const ce = SPEC_OPTIONS.sommelierAllocations.find((c) => c.id === bp.cellarId) || SPEC_OPTIONS.sommelierAllocations[0];
-    const st = SPEC_OPTIONS.householdStaffing.find((h) => h.id === bp.staffingId) || SPEC_OPTIONS.householdStaffing[0];
+  const applySampleBrief = (bp: SampleBrief) => {
+    const pl = STUDIO_PLANS.find((p) => p.id === bp.planId) || STUDIO_PLANS[0];
+    const tr = TRANSPORT_OPTIONS.find((t) => t.id === bp.transportId) || TRANSPORT_OPTIONS[0];
+    const pr = PRIVACY_OPTIONS.find((p) => p.id === bp.privacyId) || PRIVACY_OPTIONS[0];
+    const vs = PREFERENCE_OPTIONS.vehicleStyles.find((v) => v.id === bp.vehicleStyleId) || PREFERENCE_OPTIONS.vehicleStyles[0];
+    const ap = PREFERENCE_OPTIONS.arrivalPoints.find((a) => a.id === bp.arrivalId) || PREFERENCE_OPTIONS.arrivalPoints[0];
+    const hs = PREFERENCE_OPTIONS.hospitalityStyles.find((h) => h.id === bp.hospitalityId) || PREFERENCE_OPTIONS.hospitalityStyles[0];
+    const sl = PREFERENCE_OPTIONS.supportLevels.find((s) => s.id === bp.supportId) || PREFERENCE_OPTIONS.supportLevels[0];
 
-    setSelectedScenario(sc);
-    setSelectedFleet(fl);
-    setSelectedProtocol(pr);
-    setArmourLevel(ar);
-    setApronHandling(ap);
-    setCellarAlloc(ce);
-    setStaffing(st);
-    setRetainedHours(bp.hours);
-    setCodename(bp.codename);
+    setSelectedPlan(pl);
+    setSelectedTransport(tr);
+    setSelectedPrivacy(pr);
+    setVehicleStyle(vs);
+    setArrivalPoint(ap);
+    setHospitalityStyle(hs);
+    setSupportLevel(sl);
+    setEstimatedHours(bp.hours);
+    setReferenceLabel(bp.referenceLabel);
     setDeparturePoint(bp.departurePoint);
     setGuestCount(bp.guestCount);
     setTargetDate(bp.targetDate);
-    setCellarDietary(bp.cellarDietary);
-    setActiveBlueprintId(bp.id);
-    setScenarioFilter('All');
+    setNotes(bp.notes);
+    setActiveBriefId(bp.id);
+    setCategoryFilter('All');
   };
 
-  const activeAddonItems = TACTICAL_ADDONS.filter((a) => selectedAddons.includes(a.id));
-  const addonsCost = activeAddonItems.reduce((sum, a) => sum + a.cost, 0);
+  const activeEnhancementItems = OPTIONAL_ENHANCEMENTS.filter((a) =>
+    selectedEnhancements.includes(a.id)
+  );
 
-  // Cost calculation
-  const totalEstimatedCost =
-    selectedScenario.baseDisbursement +
-    selectedFleet.hourlyCost * (retainedHours || 8) +
-    selectedProtocol.costPerHour * (retainedHours || 8) +
-    armourLevel.adder +
-    apronHandling.adder +
-    cellarAlloc.adder +
-    staffing.adder +
-    addonsCost;
+  const briefRef = `TGLC-${selectedPlan.id.substring(0, 3).toUpperCase()}-${briefSerial}`;
 
-  const dossierRef = `CMD-TGLC-${selectedScenario.id.substring(0, 3).toUpperCase()}-${dossierSerial}`;
-
-  const buildManifestText = () => {
-    const addonLines =
-      activeAddonItems.length > 0
-        ? activeAddonItems.map((a) => `  - ${a.title} (+£${a.cost.toLocaleString('en-GB')})`).join('\n')
-        : '  - Standard Protocol Only';
-    return `=== THE GLOBAL LUXURY CONSORTIUM · CONFIDENTIAL COMMISSION DOSSIER ===
-Mandate Reference: ${dossierRef}
-Codename: ${codename}
-Objective: ${selectedScenario.title}
-Enclave: ${selectedScenario.location}
-Duration: ${selectedScenario.duration}
-Retained Director Hours: ${retainedHours}h
-Assigned Fleet: ${selectedFleet.name} (${selectedFleet.type})
-Security Protocol: ${selectedProtocol.name} (${selectedProtocol.level})
-Ballistic Spec: ${armourLevel.name}
-Air/Maritime Gate: ${apronHandling.name}
-Cellar Allocation: ${cellarAlloc.name}
-Staffing Detail: ${staffing.name}
-Tactical Add-Ons:
-${addonLines}
-Advance Readiness Verified: ${checkedPhases.length}/${OPERATIONAL_ROADMAP.length} Phases (${checkedPhases.join(', ') || 'Pending'})
-Departure Staging: ${departurePoint}
-Party: ${guestCount}
-Target Window: ${targetDate}
-Standing Briefing: ${cellarDietary}
-Estimated Pass-Through Disbursement: £${totalEstimatedCost.toLocaleString('en-GB')} (0% markup)
-Duty Desk: TGLC House, 3rd Floor, 45 Albemarle Street, Mayfair London W1S 4JL
-Direct Phone: ${TGLC_CONTACT.telephone}
-======================================================================`;
+  const buildBriefText = () => {
+    const enhancementLines =
+      activeEnhancementItems.length > 0
+        ? activeEnhancementItems.map((a) => `  - ${a.title}`).join('\n')
+        : '  - Standard planning only';
+    return `=== THE GLOBAL LUXURY CONSORTIUM · PRIVATE BRIEF ===
+Brief Reference: ${briefRef}
+Label: ${referenceLabel}
+Focus: ${selectedPlan.title}
+Area: ${selectedPlan.location}
+Duration: ${selectedPlan.duration} (approx. ${estimatedHours} hours)
+Travel Preference: ${selectedTransport.name} (${selectedTransport.type})
+Privacy Approach: ${selectedPrivacy.name} (${selectedPrivacy.level})
+Vehicle Style: ${vehicleStyle.name}
+Arrival & Transfer: ${arrivalPoint.name}
+Dining & Drinks: ${hospitalityStyle.name}
+Support Preference: ${supportLevel.name}
+Optional Extras:
+${enhancementLines}
+Starting Point: ${departurePoint}
+Party Size: ${guestCount}
+Preferred Dates: ${targetDate}
+Notes: ${notes}
+Availability: All arrangements are subject to availability.
+Mayfair Office: 3rd Floor, 45 Albemarle Street, Mayfair, London W1S 4JL
+Telephone: ${TGLC_CONTACT.telephone}
+Email: ${TGLC_CONTACT.email}
+=====================================================`;
   };
 
-  const handleCopyManifest = () => {
-    navigator.clipboard?.writeText(buildManifestText());
+  const handleCopyBrief = () => {
+    navigator.clipboard?.writeText(buildBriefText());
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2500);
   };
 
   const handleDownloadBrief = () => {
     try {
-      const blob = new Blob([buildManifestText()], { type: 'text/plain;charset=utf-8' });
+      const blob = new Blob([buildBriefText()], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `TGLC-Mission-Brief-${codename || dossierRef}.txt`;
+      link.download = `TGLC-Brief-${referenceLabel || briefRef}.txt`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -876,45 +809,16 @@ Direct Phone: ${TGLC_CONTACT.telephone}
       setIsDownloaded(true);
       setTimeout(() => setIsDownloaded(false), 2500);
     } catch {
-      handleCopyManifest();
+      handleCopyBrief();
     }
   };
 
-  const handleTransmit = async () => {
-    setIsTransmitting(true);
-    try {
-      const mandateId = `CMD-${Date.now().toString().slice(-4)}`;
-      setGeneratedMandateId(mandateId);
-
-      await simulatedSupabase.from('concierge_requests').insert({
-        id: mandateId,
-        userId: 'usr-client-01',
-        title: `[Mandate] ${selectedScenario.title}`,
-        category: selectedScenario.category,
-        priority: 'Urgent',
-        status: 'Received',
-        submittedDate: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        assignedTo: 'Mickell Washington, Leance Djedje & Melize Nastaasia',
-        notes: `Codename: ${codename}. Fleet: ${selectedFleet.name}. Protocol: ${selectedProtocol.name}. Staging: ${departurePoint}. Specs: ${armourLevel.name}, ${apronHandling.name}. Add-ons: ${activeAddonItems.map((a) => a.title).join(', ') || 'None'}. Cellar: ${cellarAlloc.name}.`,
-        estimatedCost: `£${totalEstimatedCost.toLocaleString('en-GB')}`,
-      });
-
-      await simulatedSupabase.from('direct_messages').insert({
-        id: `msg-${Date.now()}`,
-        userId: 'usr-client-01',
-        senderName: 'Mayfair Triage Desk',
-        senderRole: 'Automated Ingestion',
-        timestamp: 'Just now',
-        text: `Encrypted mandate [${mandateId}] "${selectedScenario.title}" received via Commission Studio. Assigned to Mickell Washington, Leance Djedje, and Melize Nastaasia for immediate reconnaissance.`,
-        isStaff: true,
-      });
-
-      setIsTransmitting(false);
-      setIsTransmitted(true);
-    } catch {
-      setIsTransmitting(false);
-      setIsTransmitted(true);
-    }
+  const handlePrepareBrief = async () => {
+    setIsPreparing(true);
+    const id = `TGLC-${Date.now().toString().slice(-4)}`;
+    setGeneratedBriefId(id);
+    setIsPreparing(false);
+    setIsPrepared(true);
   };
 
   return (
@@ -924,60 +828,59 @@ Direct Phone: ${TGLC_CONTACT.telephone}
         <div className="space-y-3 border-b border-[#232736] pb-6">
           <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] uppercase tracking-[0.2em]">
             <Compass className="w-3.5 h-3.5 text-[#E2BA6B]" />
-            <span className="text-[#E2BA6B]">The Private Commission Studio</span>
+            <span className="text-[#E2BA6B]">The Commission Studio</span>
             <span className="text-[#8B672B]">/</span>
-            <span className="text-[#8F98AA]">18 London & Global Scenarios · 6 Worked Blueprints</span>
+            <span className="text-[#8F98AA]">London &amp; International Trip Planner</span>
           </div>
 
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
             <div>
               <h1 className="font-serif text-3xl sm:text-5xl text-[#FAF7F0] text-balance">
-                Orchestrate a Bespoke Commission
+                Outline Your Ideal Plan
               </h1>
               <p className="text-xs sm:text-sm text-[#D4D8E2] max-w-2xl mt-2 leading-[1.7]">
-                Configure an itinerary from scratch across eighteen sovereign scenarios—from Vauxhall late-night DJ sound vaults and Bermondsey fight cards to Port Hercule superyachts—or apply a one-click Director’s Blueprint below for immediate operational guidance.
+                Sketch out a London evening, countryside break or overseas trip in five clear steps. Load an example below or build your own brief to share with our Mayfair team.
               </p>
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
-              <div className="p-3.5 bg-[#0D1017] border border-[#232736] text-right">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-[#8F98AA] block">
-                  Pass-Through Estimate (0% Markup)
-                </span>
-                <span className="font-serif text-2xl text-[#E2BA6B] font-semibold tabular-nums">
-                  £{totalEstimatedCost.toLocaleString('en-GB')}
-                </span>
-              </div>
+              <button
+                type="button"
+                onClick={() => openIntroductionModal(`Commission Studio: ${selectedPlan.title}`)}
+                className="btn-outline-gold px-5 py-3 text-xs cursor-pointer"
+              >
+                Speak with Mayfair
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Director Worked Blueprints Inspiration Strip */}
+        {/* Worked Examples Strip */}
         <section className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
             <div>
               <span className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#E2BA6B] block mb-1">
-                Prebuilt Worked Examples & Inspiration
+                Worked Examples &amp; Ideas
               </span>
               <h2 className="font-serif text-2xl sm:text-3xl text-[#FAF7F0]">
-                Director Worked Blueprints
+                Starting Points
               </h2>
             </div>
             <p className="text-xs text-[#8F98AA] max-w-md font-mono">
-              Select any worked blueprint to pre-load vehicle, discretion protocol, cellar & staging notes, then customize any step below.
+              Pick an example to fill in travel, privacy and dining notes, then adjust any step below.
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {PREBUILT_BLUEPRINTS.map((bp) => {
-              const isApplied = activeBlueprintId === bp.id;
+            {SAMPLE_BRIEFS.map((bp) => {
+              const isApplied = activeBriefId === bp.id;
               return (
                 <motion.button
                   key={bp.id}
                   type="button"
                   whileHover={{ y: -2 }}
                   transition={{ duration: 0.2 }}
-                  onClick={() => applyBlueprint(bp)}
+                  onClick={() => applySampleBrief(bp)}
                   className={`text-left border transition-colors overflow-hidden flex flex-col justify-between cursor-pointer group ${
                     isApplied
                       ? 'bg-[#131722] border-[#E2BA6B]'
@@ -986,11 +889,11 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                 >
                   <div>
                     <div className="aspect-[16/9] w-full overflow-hidden bg-black relative">
-                      <img
+                      <SmartImage
                         src={bp.image}
                         alt={bp.title}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-500"
+                        sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#0D1017] via-transparent to-transparent" />
                       {isApplied && (
@@ -1002,7 +905,7 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                     </div>
                     <div className="p-4 space-y-1.5">
                       <span className="font-mono text-[10px] uppercase tracking-wider text-[#E2BA6B] block">
-                        {bp.badge} · {bp.hours}h
+                        {bp.badge}
                       </span>
                       <h3 className="font-serif text-lg text-[#FAF7F0] group-hover:text-[#F0CC83] transition-colors leading-snug">
                         {bp.title}
@@ -1013,7 +916,7 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                     </div>
                   </div>
                   <div className="px-4 py-2.5 border-t border-[#1D212F] flex items-center justify-between font-mono text-[11px] text-[#E2BA6B]">
-                    <span>{isApplied ? 'Active in Studio Editor' : 'Load Worked Blueprint'}</span>
+                    <span>{isApplied ? 'Active in Planner' : 'Load Example'}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </div>
                 </motion.button>
@@ -1022,15 +925,17 @@ Direct Phone: ${TGLC_CONTACT.telephone}
           </div>
         </section>
 
-        {/* Active Director Rationale Callout */}
+        {/* Active Guidance Callout */}
         <div className="p-4 sm:p-5 bg-[#0D1017] border border-[#232736] flex items-start gap-3.5">
           <Info className="w-4 h-4 text-[#E2BA6B] shrink-0 mt-0.5" />
           <div className="space-y-1">
             <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#E2BA6B] block">
-              {activeBlueprint ? `Director’s Rationale · ${activeBlueprint.title}` : `Director’s Field Guidance · ${selectedScenario.title}`}
+              {activeSampleBrief
+                ? `Planning Note · ${activeSampleBrief.title}`
+                : `Planning Note · ${selectedPlan.title}`}
             </span>
             <p className="text-xs sm:text-sm text-[#D4D8E2] leading-relaxed">
-              {activeBlueprint ? activeBlueprint.rationale : selectedScenario.guidanceNote}
+              {activeSampleBrief ? activeSampleBrief.rationale : selectedPlan.guidanceNote}
             </p>
           </div>
         </div>
@@ -1038,17 +943,18 @@ Direct Phone: ${TGLC_CONTACT.telephone}
         {/* 5-Step Progress Navigation */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
           {[
-            { num: '01', label: '1. Objective & Scenario' },
-            { num: '02', label: '2. Fleet & Mobility' },
-            { num: '03', label: '3. Security Protocol' },
-            { num: '04', label: '4. Tactical Specifications' },
-            { num: '05', label: '5. Logistics & Dispatch' },
+            { num: '01', label: '1. Occasion & Idea' },
+            { num: '02', label: '2. Travel & Transfers' },
+            { num: '03', label: '3. Privacy & Support' },
+            { num: '04', label: '4. Preferences' },
+            { num: '05', label: '5. Dates & Notes' },
           ].map((step, idx) => {
             const isActive = currentStep === idx;
             const isCompleted = currentStep > idx;
             return (
               <button
                 key={step.num}
+                type="button"
                 onClick={() => setCurrentStep(idx)}
                 className={`p-3 text-left border transition-colors cursor-pointer ${
                   isActive
@@ -1068,11 +974,11 @@ Direct Phone: ${TGLC_CONTACT.telephone}
           })}
         </div>
 
-        {/* Main Split Layout: Left Visual Editor / Right Live Dossier Manifest */}
+        {/* Main Split Layout: Left Visual Editor / Right Live Brief Summary */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Main Configuration Area */}
           <div className="lg:col-span-7 space-y-6">
-            {/* Step 1: Visual Scenario Selection with Category Filter */}
+            {/* Step 1: Plan Selection with Category Filter */}
             {currentStep === 0 && (
               <motion.div
                 initial={{ opacity: 0.9, y: 8 }}
@@ -1082,22 +988,22 @@ Direct Phone: ${TGLC_CONTACT.telephone}
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-mono text-xs uppercase tracking-widest text-[#E2BA6B] font-medium">
-                    Step 1 · Select Sovereign Scenario ({filteredScenarios.length})
+                    Step 1 · Choose an Occasion ({filteredPlans.length})
                   </span>
                   <span className="font-mono text-[11px] text-[#8F98AA] tabular-nums">
-                    {SCENARIOS.length} curated domains
+                    All ideas subject to availability
                   </span>
                 </div>
 
                 {/* Category Filter Buttons */}
                 <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
-                  {SCENARIO_CATEGORIES.map((cat) => {
-                    const isActive = scenarioFilter === cat;
+                  {PLAN_CATEGORIES.map((cat) => {
+                    const isActive = categoryFilter === cat;
                     return (
                       <button
                         key={cat}
                         type="button"
-                        onClick={() => setScenarioFilter(cat)}
+                        onClick={() => setCategoryFilter(cat)}
                         className={`h-8 px-3 text-[11px] font-mono whitespace-nowrap shrink-0 border transition-colors cursor-pointer ${
                           isActive
                             ? 'bg-[#E2BA6B] text-[#07080B] border-[#F0CC83] font-semibold'
@@ -1111,15 +1017,15 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {filteredScenarios.map((scenario) => {
-                    const isSelected = selectedScenario.id === scenario.id;
+                  {filteredPlans.map((plan) => {
+                    const isSelected = selectedPlan.id === plan.id;
                     return (
                       <div
-                        key={scenario.id}
+                        key={plan.id}
                         onClick={() => {
-                          setSelectedScenario(scenario);
-                          setRetainedHours(scenario.baseHours);
-                          setActiveBlueprintId(null);
+                          setSelectedPlan(plan);
+                          setEstimatedHours(plan.defaultHours);
+                          setActiveBriefId(null);
                         }}
                         className={`p-4 border transition-colors cursor-pointer flex flex-col justify-between group ${
                           isSelected
@@ -1129,11 +1035,11 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                       >
                         <div>
                           <div className="aspect-[16/10] w-full overflow-hidden mb-3 bg-black relative">
-                            <img
-                              src={scenario.image}
-                              alt={scenario.title}
-                              referrerPolicy="no-referrer"
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-105"
+                            <SmartImage
+                              src={plan.image}
+                              alt={plan.title}
+                              sizes="(max-width: 640px) 100vw, 30vw"
+                              className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700 brightness-105"
                             />
                             {isSelected && (
                               <div className="absolute top-2 right-2 bg-[#E2BA6B] text-[#07080B] p-1">
@@ -1142,20 +1048,20 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                             )}
                           </div>
                           <span className="font-mono text-[10px] tracking-wider uppercase text-[#E2BA6B] block">
-                            {scenario.category}
+                            {plan.category}
                           </span>
                           <h3 className="font-serif text-lg text-[#FAF7F0] mt-1 mb-1 leading-snug">
-                            {scenario.title}
+                            {plan.title}
                           </h3>
                           <p className="text-xs text-[#D4D8E2] line-clamp-2 leading-relaxed">
-                            {scenario.tagline}
+                            {plan.tagline}
                           </p>
                         </div>
 
                         <div className="mt-4 pt-2.5 border-t border-[#1D212F] flex items-center justify-between text-[11px]">
-                          <span className="text-[#8F98AA] truncate mr-2">{scenario.location}</span>
-                          <span className="tabular-nums font-mono text-[#E2BA6B] shrink-0">
-                            From £{scenario.baseDisbursement.toLocaleString('en-GB')}
+                          <span className="text-[#8F98AA] truncate mr-2">{plan.location}</span>
+                          <span className="font-mono text-[#E2BA6B] shrink-0">
+                            {plan.duration}
                           </span>
                         </div>
                       </div>
@@ -1165,17 +1071,18 @@ Direct Phone: ${TGLC_CONTACT.telephone}
 
                 <div className="flex justify-end pt-2">
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(1)}
                     className="btn-gold px-7 py-3 text-xs flex items-center gap-2 cursor-pointer"
                   >
-                    <span>Proceed to Fleet & Mobility</span>
+                    <span>Next: Travel &amp; Transfers</span>
                     <ArrowRight className="w-3.5 h-3.5 text-[#07080B]" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 2: Fleet & Mobility */}
+            {/* Step 2: Travel & Transfers */}
             {currentStep === 1 && (
               <motion.div
                 initial={{ opacity: 0.9, y: 8 }}
@@ -1185,25 +1092,26 @@ Direct Phone: ${TGLC_CONTACT.telephone}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs uppercase tracking-widest text-[#E2BA6B] font-medium">
-                    Step 2 · Select Fleet & Mobility Sanctuary ({FLEET_OPTIONS.length} Assets)
+                    Step 2 · Travel &amp; Transfers ({TRANSPORT_OPTIONS.length} Options)
                   </span>
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(0)}
                     className="text-xs text-[#8F98AA] hover:text-[#E2BA6B] cursor-pointer"
                   >
-                    ← Back to Scenario
+                    ← Back to Occasion
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {FLEET_OPTIONS.map((fleet) => {
-                    const isSelected = selectedFleet.id === fleet.id;
+                  {TRANSPORT_OPTIONS.map((transport) => {
+                    const isSelected = selectedTransport.id === transport.id;
                     return (
                       <div
-                        key={fleet.id}
+                        key={transport.id}
                         onClick={() => {
-                          setSelectedFleet(fleet);
-                          setActiveBlueprintId(null);
+                          setSelectedTransport(transport);
+                          setActiveBriefId(null);
                         }}
                         className={`p-4 border transition-colors cursor-pointer flex flex-col justify-between group ${
                           isSelected
@@ -1213,11 +1121,11 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                       >
                         <div>
                           <div className="aspect-[16/10] w-full overflow-hidden mb-3 bg-black relative">
-                            <img
-                              src={fleet.image}
-                              alt={fleet.name}
-                              referrerPolicy="no-referrer"
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 brightness-105"
+                            <SmartImage
+                              src={transport.image}
+                              alt={transport.name}
+                              sizes="(max-width: 640px) 100vw, 30vw"
+                              className="w-full h-full object-cover group-hover:scale-104 transition-transform duration-700 brightness-105"
                             />
                             {isSelected && (
                               <div className="absolute top-2 right-2 bg-[#E2BA6B] text-[#07080B] p-1">
@@ -1225,19 +1133,14 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                               </div>
                             )}
                           </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-mono text-[10px] tracking-wider uppercase text-[#E2BA6B] truncate">
-                              {fleet.category} · {fleet.type}
-                            </span>
-                            <span className="text-[11px] font-mono text-[#E2BA6B] tabular-nums shrink-0">
-                              £{fleet.hourlyCost}/hr
-                            </span>
-                          </div>
+                          <span className="font-mono text-[10px] tracking-wider uppercase text-[#E2BA6B] block truncate">
+                            {transport.category} · {transport.type}
+                          </span>
                           <h3 className="font-serif text-lg text-[#FAF7F0] mt-1 mb-1">
-                            {fleet.name}
+                            {transport.name}
                           </h3>
                           <p className="text-xs text-[#D4D8E2] leading-relaxed">
-                            {fleet.desc}
+                            {transport.desc}
                           </p>
                         </div>
                       </div>
@@ -1247,23 +1150,25 @@ Direct Phone: ${TGLC_CONTACT.telephone}
 
                 <div className="flex justify-between items-center pt-2">
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(0)}
                     className="text-xs uppercase tracking-wider text-[#8F98AA] hover:text-[#FAF7F0] cursor-pointer"
                   >
                     ← Back
                   </button>
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(2)}
                     className="btn-gold px-7 py-3 text-xs flex items-center gap-2 cursor-pointer"
                   >
-                    <span>Proceed to Security Protocol</span>
+                    <span>Next: Privacy &amp; Support</span>
                     <ArrowRight className="w-3.5 h-3.5 text-[#07080B]" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 3: Security Protocol */}
+            {/* Step 3: Privacy & Support */}
             {currentStep === 2 && (
               <motion.div
                 initial={{ opacity: 0.9, y: 8 }}
@@ -1273,23 +1178,24 @@ Direct Phone: ${TGLC_CONTACT.telephone}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs uppercase tracking-widest text-[#E2BA6B] font-medium">
-                    Step 3 · Discretion & Tactical Protection Protocol
+                    Step 3 · Privacy &amp; Support Style
                   </span>
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(1)}
                     className="text-xs text-[#8F98AA] hover:text-[#E2BA6B] cursor-pointer"
                   >
-                    ← Back to Fleet
+                    ← Back to Travel
                   </button>
                 </div>
 
                 <div className="space-y-3">
-                  {SECURITY_PROTOCOLS.map((protocol) => {
-                    const isSelected = selectedProtocol.id === protocol.id;
+                  {PRIVACY_OPTIONS.map((option) => {
+                    const isSelected = selectedPrivacy.id === option.id;
                     return (
                       <div
-                        key={protocol.id}
-                        onClick={() => setSelectedProtocol(protocol)}
+                        key={option.id}
+                        onClick={() => setSelectedPrivacy(option)}
                         className={`p-4 border transition-colors cursor-pointer flex items-start justify-between gap-4 ${
                           isSelected
                             ? 'bg-[#131722] border-[#E2BA6B] shadow-xl'
@@ -1299,16 +1205,13 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-2">
                             <Shield className={`w-4 h-4 ${isSelected ? 'text-[#E2BA6B]' : 'text-[#8F98AA]'}`} />
-                            <h3 className="font-serif text-lg text-[#FAF7F0]">{protocol.name}</h3>
+                            <h3 className="font-serif text-lg text-[#FAF7F0]">{option.name}</h3>
                             <span className="text-[#8B672B]">·</span>
                             <span className="text-[11px] uppercase font-mono text-[#E2BA6B]">
-                              {protocol.level}
+                              {option.level}
                             </span>
                           </div>
-                          <p className="text-xs text-[#D4D8E2] pl-6 leading-relaxed">{protocol.desc}</p>
-                          <span className="text-[11px] text-[#E2BA6B] font-mono pl-6 block tabular-nums">
-                            +£{protocol.costPerHour}/hour security officer allocation
-                          </span>
+                          <p className="text-xs text-[#D4D8E2] pl-6 leading-relaxed">{option.desc}</p>
                         </div>
 
                         {isSelected && (
@@ -1323,23 +1226,25 @@ Direct Phone: ${TGLC_CONTACT.telephone}
 
                 <div className="flex justify-between items-center pt-2">
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(1)}
                     className="text-xs uppercase tracking-wider text-[#8F98AA] hover:text-[#FAF7F0] cursor-pointer"
                   >
                     ← Back
                   </button>
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(3)}
                     className="btn-gold px-7 py-3 text-xs flex items-center gap-2 cursor-pointer"
                   >
-                    <span>Proceed to Tactical Specs</span>
+                    <span>Next: Preferences</span>
                     <ArrowRight className="w-3.5 h-3.5 text-[#07080B]" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 4: Tactical Specifications Picker */}
+            {/* Step 4: Practical Preferences */}
             {currentStep === 3 && (
               <motion.div
                 initial={{ opacity: 0.9, y: 8 }}
@@ -1349,116 +1254,105 @@ Direct Phone: ${TGLC_CONTACT.telephone}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs uppercase tracking-widest text-[#E2BA6B] font-medium">
-                    Step 4 · Tactical Specifications & Curated Allocations
+                    Step 4 · Practical Preferences
                   </span>
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(2)}
                     className="text-xs text-[#8F98AA] hover:text-[#E2BA6B] cursor-pointer"
                   >
-                    ← Back to Protocol
+                    ← Back to Privacy
                   </button>
                 </div>
 
                 <div className="bg-[#0D1017] border border-[#232736] p-5 space-y-5 text-xs">
-                  {/* Armour Level */}
+                  {/* Vehicle Style */}
                   <div>
-                    <label className="text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-2 flex items-center justify-between font-mono">
-                      <span>Ballistic Armour Spec</span>
-                      <span className="text-[#E2BA6B] tabular-nums">+£{armourLevel.adder}</span>
+                    <label className="text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-2 block font-mono">
+                      Vehicle Style
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {SPEC_OPTIONS.armourLevels.map((lvl) => (
+                      {PREFERENCE_OPTIONS.vehicleStyles.map((item) => (
                         <button
-                          key={lvl.id}
+                          key={item.id}
                           type="button"
-                          onClick={() => setArmourLevel(lvl)}
+                          onClick={() => setVehicleStyle(item)}
                           className={`p-2.5 text-left border cursor-pointer transition-colors ${
-                            armourLevel.id === lvl.id
+                            vehicleStyle.id === item.id
                               ? 'bg-[#131722] border-[#E2BA6B] text-[#FAF7F0]'
                               : 'bg-[#090B10] border-[#232736] text-[#D4D8E2] hover:text-[#FAF7F0]'
                           }`}
                         >
-                          <span className="block font-medium truncate">{lvl.name}</span>
-                          <span className="text-[10px] text-[#E2BA6B] font-mono tabular-nums">
-                            {lvl.adder === 0 ? 'Included' : `+£${lvl.adder}`}
-                          </span>
+                          <span className="block font-medium">{item.name}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Apron Handling Gate */}
+                  {/* Arrival & Transfer */}
                   <div>
-                    <label className="text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-2 flex items-center justify-between font-mono">
-                      <span>Apron / Maritime VIP Gate Handling</span>
-                      <span className="text-[#E2BA6B] tabular-nums">+£{apronHandling.adder}</span>
+                    <label className="text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-2 block font-mono">
+                      Arrival &amp; Transfer Point
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {SPEC_OPTIONS.apronHandling.map((gate) => (
+                      {PREFERENCE_OPTIONS.arrivalPoints.map((item) => (
                         <button
-                          key={gate.id}
+                          key={item.id}
                           type="button"
-                          onClick={() => setApronHandling(gate)}
+                          onClick={() => setArrivalPoint(item)}
                           className={`p-2.5 text-left border cursor-pointer transition-colors ${
-                            apronHandling.id === gate.id
+                            arrivalPoint.id === item.id
                               ? 'bg-[#131722] border-[#E2BA6B] text-[#FAF7F0]'
                               : 'bg-[#090B10] border-[#232736] text-[#D4D8E2] hover:text-[#FAF7F0]'
                           }`}
                         >
-                          <span className="block font-medium truncate">{gate.name}</span>
-                          <span className="text-[10px] text-[#E2BA6B] font-mono tabular-nums">+£{gate.adder}</span>
+                          <span className="block font-medium">{item.name}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Sommelier Allocation */}
+                  {/* Dining & Drinks */}
                   <div>
-                    <label className="text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-2 flex items-center justify-between font-mono">
-                      <span>Sommelier & Cellar Allocation</span>
-                      <span className="text-[#E2BA6B] tabular-nums">+£{cellarAlloc.adder}</span>
+                    <label className="text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-2 block font-mono">
+                      Wine &amp; Drinks Preference
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {SPEC_OPTIONS.sommelierAllocations.map((c) => (
+                      {PREFERENCE_OPTIONS.hospitalityStyles.map((item) => (
                         <button
-                          key={c.id}
+                          key={item.id}
                           type="button"
-                          onClick={() => setCellarAlloc(c)}
+                          onClick={() => setHospitalityStyle(item)}
                           className={`p-2.5 text-left border cursor-pointer transition-colors ${
-                            cellarAlloc.id === c.id
+                            hospitalityStyle.id === item.id
                               ? 'bg-[#131722] border-[#E2BA6B] text-[#FAF7F0]'
                               : 'bg-[#090B10] border-[#232736] text-[#D4D8E2] hover:text-[#FAF7F0]'
                           }`}
                         >
-                          <span className="block font-medium truncate">{c.name}</span>
-                          <span className="text-[10px] text-[#E2BA6B] font-mono tabular-nums">+£{c.adder}</span>
+                          <span className="block font-medium">{item.name}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* Household & Concierge Staffing */}
+                  {/* Support Level */}
                   <div>
-                    <label className="text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-2 flex items-center justify-between font-mono">
-                      <span>Household & Dedicated Staffing Brigade</span>
-                      <span className="text-[#E2BA6B] tabular-nums">+£{staffing.adder}</span>
+                    <label className="text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-2 block font-mono">
+                      Support Preference
                     </label>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      {SPEC_OPTIONS.householdStaffing.map((s) => (
+                      {PREFERENCE_OPTIONS.supportLevels.map((item) => (
                         <button
-                          key={s.id}
+                          key={item.id}
                           type="button"
-                          onClick={() => setStaffing(s)}
+                          onClick={() => setSupportLevel(item)}
                           className={`p-2.5 text-left border cursor-pointer transition-colors ${
-                            staffing.id === s.id
+                            supportLevel.id === item.id
                               ? 'bg-[#131722] border-[#E2BA6B] text-[#FAF7F0]'
                               : 'bg-[#090B10] border-[#232736] text-[#D4D8E2] hover:text-[#FAF7F0]'
                           }`}
                         >
-                          <span className="block font-medium truncate">{s.name}</span>
-                          <span className="text-[10px] text-[#E2BA6B] font-mono tabular-nums">
-                            {s.adder === 0 ? 'Included' : `+£${s.adder}`}
-                          </span>
+                          <span className="block font-medium">{item.name}</span>
                         </button>
                       ))}
                     </div>
@@ -1467,23 +1361,25 @@ Direct Phone: ${TGLC_CONTACT.telephone}
 
                 <div className="flex justify-between items-center pt-2">
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(2)}
                     className="text-xs uppercase tracking-wider text-[#8F98AA] hover:text-[#FAF7F0] cursor-pointer"
                   >
                     ← Back
                   </button>
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(4)}
                     className="btn-gold px-7 py-3 text-xs flex items-center gap-2 cursor-pointer"
                   >
-                    <span>Proceed to Logistics & Dispatch</span>
+                    <span>Next: Dates &amp; Notes</span>
                     <ArrowRight className="w-3.5 h-3.5 text-[#07080B]" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 5: Schedule, Criteria & Confirmation */}
+            {/* Step 5: Dates, Notes & Prepare Brief */}
             {currentStep === 4 && (
               <motion.div
                 initial={{ opacity: 0.9, y: 8 }}
@@ -1493,45 +1389,48 @@ Direct Phone: ${TGLC_CONTACT.telephone}
               >
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs uppercase tracking-widest text-[#E2BA6B] font-medium">
-                    Step 5 · Schedule, Logistics & Direct Dispatch
+                    Step 5 · Dates, Party &amp; Notes
                   </span>
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(3)}
                     className="text-xs text-[#8F98AA] hover:text-[#E2BA6B] cursor-pointer"
                   >
-                    ← Back to Specifications
+                    ← Back to Preferences
                   </button>
                 </div>
 
-                {/* Retained Hours Slider */}
+                {/* Estimated Time Slider */}
                 <div className="bg-[#0D1017] border border-[#232736] p-5 space-y-3">
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-mono uppercase tracking-wider text-[#FAF7F0] flex items-center gap-1.5 font-medium">
                       <Clock className="w-3.5 h-3.5 text-[#E2BA6B]" />
-                      <span>Retained Director Hours</span>
+                      <span>Approximate Duration</span>
                     </span>
-                    <span className="font-mono text-sm text-[#E2BA6B] font-bold tabular-nums">{retainedHours} Hours</span>
+                    <span className="font-mono text-sm text-[#E2BA6B] font-bold tabular-nums">
+                      {estimatedHours} Hours
+                    </span>
                   </div>
                   <input
                     type="range"
                     min={4}
                     max={48}
                     step={2}
-                    value={retainedHours}
-                    onChange={(e) => setRetainedHours(Number(e.target.value))}
+                    value={estimatedHours}
+                    onChange={(e) => setEstimatedHours(Number(e.target.value))}
                     className="w-full accent-[#E2BA6B] cursor-pointer"
                   />
                   <div className="flex justify-between text-[10px] text-[#8F98AA] font-mono tabular-nums">
-                    <span>4 Hours (Briefing)</span>
-                    <span>16 Hours (Full Day)</span>
-                    <span>48 Hours (Multi-Day Operation)</span>
+                    <span>Half Day</span>
+                    <span>Full Day</span>
+                    <span>Weekend / Multi-Day</span>
                   </div>
                 </div>
 
                 <div className="bg-[#0D1017] border border-[#232736] p-6 space-y-4 text-xs">
                   <div>
                     <label className="block font-mono text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-1">
-                      Departure Point & Staging Mews
+                      Starting Point
                     </label>
                     <input
                       type="text"
@@ -1544,7 +1443,7 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block font-mono text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-1">
-                        Principal & Guest Count
+                        Party Size
                       </label>
                       <input
                         type="text"
@@ -1555,7 +1454,7 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                     </div>
                     <div>
                       <label className="block font-mono text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-1">
-                        Target Date / Operation Window
+                        Preferred Dates
                       </label>
                       <input
                         type="text"
@@ -1568,36 +1467,36 @@ Direct Phone: ${TGLC_CONTACT.telephone}
 
                   <div>
                     <label className="block font-mono text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-1">
-                      Cellar, Culinary & Acoustic Criteria
+                      Dining, Dietary or Timing Notes
                     </label>
                     <textarea
                       rows={3}
-                      value={cellarDietary}
-                      onChange={(e) => setCellarDietary(e.target.value)}
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
                       className="w-full bg-[#131722] border border-[#2A2D38] px-3.5 py-2.5 text-[#FAF7F0] focus:outline-none focus:border-[#E2BA6B] resize-none"
                     />
                   </div>
 
                   <div>
                     <label className="block font-mono text-[11px] uppercase tracking-wider text-[#FAF7F0] mb-1">
-                      Mission Codename (Discretion Alias)
+                      Brief Name (Optional)
                     </label>
                     <input
                       type="text"
-                      value={codename}
-                      onChange={(e) => setCodename(e.target.value.toUpperCase())}
+                      value={referenceLabel}
+                      onChange={(e) => setReferenceLabel(e.target.value.toUpperCase())}
                       className="w-full bg-[#131722] border border-[#2A2D38] px-3.5 py-2.5 font-mono text-[#E2BA6B] tracking-wider focus:outline-none focus:border-[#E2BA6B]"
                     />
                   </div>
                 </div>
 
-                {/* Operational Roadmap Preview */}
+                {/* Planning Stages Preview */}
                 <div className="bg-[#0D1017] border border-[#232736] p-5 space-y-3">
                   <span className="font-mono text-[10px] uppercase tracking-widest text-[#E2BA6B] font-medium block">
-                    Operational Execution Roadmap
+                    How We Plan Your Brief
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
-                    {OPERATIONAL_ROADMAP.map((step) => (
+                    {PLANNING_STAGES.map((step) => (
                       <div key={step.phase} className="p-2.5 bg-[#131722] border border-[#232736] space-y-1">
                         <span className="text-[10px] font-mono text-[#E2BA6B] block">{step.phase}</span>
                         <strong className="text-[11px] text-[#FAF7F0] block">{step.title}</strong>
@@ -1609,76 +1508,79 @@ Direct Phone: ${TGLC_CONTACT.telephone}
 
                 <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
                   <button
+                    type="button"
                     onClick={() => setCurrentStep(3)}
                     className="text-xs uppercase tracking-wider text-[#8F98AA] hover:text-[#FAF7F0] cursor-pointer"
                   >
-                    ← Back to Specs
+                    ← Back to Preferences
                   </button>
 
                   <button
-                    onClick={handleTransmit}
-                    disabled={isTransmitting}
+                    type="button"
+                    onClick={handlePrepareBrief}
+                    disabled={isPreparing}
                     className="btn-gold px-8 py-3.5 text-xs flex items-center gap-2 cursor-pointer disabled:opacity-50"
                   >
                     <Send className="w-3.5 h-3.5 text-[#07080B]" />
-                    <span>{isTransmitting ? 'Transmitting Mandate...' : 'Transmit Instruction to Mayfair Desk'}</span>
+                    <span>{isPreparing ? 'Preparing Brief...' : 'Prepare Brief for Mayfair'}</span>
                   </button>
                 </div>
               </motion.div>
             )}
           </div>
 
-          {/* Right Column: Visual Mission Preview & Confidential Live Dossier Manifest */}
+          {/* Right Column: Live Brief Summary */}
           <div className="lg:col-span-5 space-y-4">
             <div className="bg-[#0D1017] border border-[#232736] p-6 shadow-2xl relative overflow-hidden">
               {/* Gold watermark crest */}
               <div className="absolute top-0 right-0 w-36 h-36 opacity-5 pointer-events-none">
-                <img
+                <SmartImage
                   src="/assets/aistudio/tglc_crest_transparent.png"
-                  alt="Crest watermark"
+                  alt=""
+                  sizes="144px"
                   className="w-full h-full object-contain filter invert"
                 />
               </div>
 
-              {/* Dossier Header */}
+              {/* Brief Header */}
               <div className="flex items-center justify-between pb-4 border-b border-[#232736]">
                 <div className="flex items-center gap-2">
                   <Lock className="w-3.5 h-3.5 text-[#E2BA6B]" />
                   <span className="text-[11px] font-mono tracking-wider text-[#E2BA6B] tabular-nums">
-                    {dossierRef}
+                    {briefRef}
                   </span>
                 </div>
                 <span className="text-[10px] uppercase font-mono tracking-wider text-[#8F98AA]">
-                  CONFIDENTIAL MANDATE
+                  PRIVATE BRIEF
                 </span>
               </div>
 
-              {/* Visual Dyad Strip (Selected Scenario + Selected Fleet) */}
+              {/* Visual Dyad Strip */}
               <div className="grid grid-cols-2 gap-2.5 pt-4">
                 <div className="space-y-1">
                   <div className="aspect-[16/10] overflow-hidden border border-[#232736] bg-black">
-                    <img
-                      src={selectedScenario.image}
-                      alt={selectedScenario.title}
-                      referrerPolicy="no-referrer"
+                    <SmartImage
+                      src={selectedPlan.image}
+                      alt={selectedPlan.title}
+                      sizes="(max-width: 1024px) 50vw, 20vw"
                       className="w-full h-full object-cover brightness-105"
                     />
                   </div>
                   <span className="font-mono text-[9px] uppercase text-[#8F98AA] block truncate">
-                    Domain · {selectedScenario.category}
+                    Focus · {selectedPlan.category}
                   </span>
                 </div>
                 <div className="space-y-1">
                   <div className="aspect-[16/10] overflow-hidden border border-[#232736] bg-black">
-                    <img
-                      src={selectedFleet.image}
-                      alt={selectedFleet.name}
-                      referrerPolicy="no-referrer"
+                    <SmartImage
+                      src={selectedTransport.image}
+                      alt={selectedTransport.name}
+                      sizes="(max-width: 1024px) 50vw, 20vw"
                       className="w-full h-full object-cover brightness-105"
                     />
                   </div>
                   <span className="font-mono text-[9px] uppercase text-[#8F98AA] block truncate">
-                    Asset · {selectedFleet.category}
+                    Travel · {selectedTransport.category}
                   </span>
                 </div>
               </div>
@@ -1687,70 +1589,70 @@ Direct Phone: ${TGLC_CONTACT.telephone}
               <div className="py-4 space-y-4 text-xs">
                 <div>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-[#8F98AA] block">
-                    Commission Codename
+                    Brief Label
                   </span>
                   <span className="font-mono text-sm text-[#FAF7F0] font-semibold tracking-wider">
-                    {codename || 'NOCTURNE-RESOLUTE'}
+                    {referenceLabel || 'LONDON-PLAN'}
                   </span>
                 </div>
 
                 <div>
                   <span className="font-mono text-[10px] uppercase tracking-wider text-[#8F98AA] block">
-                    Sovereign Objective
+                    Selected Idea
                   </span>
                   <h4 className="font-serif text-lg text-[#FAF7F0] mt-0.5 leading-snug">
-                    {selectedScenario.title}
+                    {selectedPlan.title}
                   </h4>
                   <p className="text-[11px] text-[#E2BA6B] mt-0.5">
-                    {selectedScenario.location} · {selectedScenario.duration}
+                    {selectedPlan.location} · {selectedPlan.duration}
                   </p>
                 </div>
 
-                {/* Live Sequence Timeline */}
+                {/* Live Outline */}
                 <div className="p-3 bg-[#090B10] border border-[#1D212F] space-y-2">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-[#E2BA6B] block">
-                    Live Mission Sequence
+                    Plan Outline
                   </span>
                   <div className="space-y-1.5 text-[11px]">
                     <div className="flex items-center justify-between gap-2 text-[#D4D8E2]">
-                      <span className="font-mono text-[#8F98AA]">01 · Staging</span>
+                      <span className="font-mono text-[#8F98AA]">01 · Start</span>
                       <span className="text-[#FAF7F0] truncate text-right">{departurePoint.split(',')[0]}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2 text-[#D4D8E2]">
-                      <span className="font-mono text-[#8F98AA]">02 · Mobility</span>
-                      <span className="text-[#FAF7F0] truncate text-right">{selectedFleet.name}</span>
+                      <span className="font-mono text-[#8F98AA]">02 · Travel</span>
+                      <span className="text-[#FAF7F0] truncate text-right">{selectedTransport.name}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2 text-[#D4D8E2]">
-                      <span className="font-mono text-[#8F98AA]">03 · Escort</span>
-                      <span className="text-[#FAF7F0] truncate text-right">{selectedProtocol.level}</span>
+                      <span className="font-mono text-[#8F98AA]">03 · Privacy</span>
+                      <span className="text-[#FAF7F0] truncate text-right">{selectedPrivacy.level}</span>
                     </div>
                     <div className="flex items-center justify-between gap-2 text-[#D4D8E2]">
-                      <span className="font-mono text-[#8F98AA]">04 · Sanctum</span>
-                      <span className="text-[#E2BA6B] truncate text-right">{selectedScenario.location}</span>
+                      <span className="font-mono text-[#8F98AA]">04 · Area</span>
+                      <span className="text-[#E2BA6B] truncate text-right">{selectedPlan.location}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Tactical Specs Summary */}
+                {/* Preferences Summary */}
                 <div className="p-3 bg-[#131722] border border-[#232736] space-y-1.5 text-[11px]">
                   <span className="font-mono text-[10px] uppercase tracking-wider text-[#E2BA6B] block">
-                    Configured Specifications
+                    Selected Preferences
                   </span>
                   <div className="flex justify-between gap-2 text-[#8F98AA]">
-                    <span>Ballistic Protection:</span>
-                    <span className="text-[#FAF7F0] text-right truncate">{armourLevel.name}</span>
+                    <span>Vehicle Style:</span>
+                    <span className="text-[#FAF7F0] text-right truncate">{vehicleStyle.name}</span>
                   </div>
                   <div className="flex justify-between gap-2 text-[#8F98AA]">
-                    <span>Apron / Marine Gate:</span>
-                    <span className="text-[#FAF7F0] text-right truncate">{apronHandling.name}</span>
+                    <span>Arrival Point:</span>
+                    <span className="text-[#FAF7F0] text-right truncate">{arrivalPoint.name}</span>
                   </div>
                   <div className="flex justify-between gap-2 text-[#8F98AA]">
-                    <span>Cellar Allocation:</span>
-                    <span className="text-[#FAF7F0] text-right truncate">{cellarAlloc.name}</span>
+                    <span>Wine &amp; Drinks:</span>
+                    <span className="text-[#FAF7F0] text-right truncate">{hospitalityStyle.name}</span>
                   </div>
                   <div className="flex justify-between gap-2 text-[#8F98AA]">
-                    <span>Staffing Brigade:</span>
-                    <span className="text-[#FAF7F0] text-right truncate">{staffing.name}</span>
+                    <span>Support:</span>
+                    <span className="text-[#FAF7F0] text-right truncate">{supportLevel.name}</span>
                   </div>
                 </div>
 
@@ -1758,13 +1660,13 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                   <div className="flex items-start gap-2 text-[#D4D8E2]">
                     <MapPin className="w-3.5 h-3.5 text-[#E2BA6B] shrink-0 mt-0.5" />
                     <span>
-                      Staging: <strong className="text-[#FAF7F0] font-normal">{departurePoint}</strong>
+                      Start: <strong className="text-[#FAF7F0] font-normal">{departurePoint}</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-[#D4D8E2]">
                     <Calendar className="w-3.5 h-3.5 text-[#E2BA6B] shrink-0" />
                     <span>
-                      Target: <strong className="text-[#FAF7F0] font-normal">{targetDate}</strong>
+                      Dates: <strong className="text-[#FAF7F0] font-normal">{targetDate}</strong>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 text-[#D4D8E2]">
@@ -1774,51 +1676,13 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                     </span>
                   </div>
                 </div>
-
-                {/* Cost Breakdown */}
-                <div className="p-4 bg-[#131722] border border-[#8B672B] space-y-2 text-xs">
-                  <div className="flex items-center justify-between text-[11px] text-[#D4D8E2]">
-                    <span>Base Scenario Disbursement</span>
-                    <span className="font-mono text-[#FAF7F0] tabular-nums">
-                      £{selectedScenario.baseDisbursement.toLocaleString('en-GB')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-[#D4D8E2]">
-                    <span>Fleet & Security ({retainedHours}h)</span>
-                    <span className="font-mono text-[#FAF7F0] tabular-nums">
-                      £{((selectedFleet.hourlyCost + selectedProtocol.costPerHour) * retainedHours).toLocaleString('en-GB')}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-[#D4D8E2]">
-                    <span>Tactical Specifications & Cellar</span>
-                    <span className="font-mono text-[#FAF7F0] tabular-nums">
-                      £{(armourLevel.adder + apronHandling.adder + cellarAlloc.adder + staffing.adder).toLocaleString('en-GB')}
-                    </span>
-                  </div>
-                  {addonsCost > 0 && (
-                    <div className="flex items-center justify-between text-[11px] text-[#D4D8E2]">
-                      <span>Operational Protocols ({activeAddonItems.length})</span>
-                      <span className="font-mono text-[#FAF7F0] tabular-nums">
-                        £{addonsCost.toLocaleString('en-GB')}
-                      </span>
-                    </div>
-                  )}
-                  <div className="pt-2 border-t border-[#232736] flex items-center justify-between font-serif text-sm">
-                    <span className="text-[#FAF7F0]">Estimated Pass-Through Total</span>
-                    <span className="text-[#E2BA6B] font-bold text-base font-mono tabular-nums">
-                      £{totalEstimatedCost.toLocaleString('en-GB')}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-[#8F98AA] block italic">
-                    0% Consortium Markup · Pass-through direct ledger debit
-                  </span>
-                </div>
               </div>
 
-              {/* Dossier Actions */}
+              {/* Brief Actions */}
               <div className="pt-3 border-t border-[#232736] flex flex-wrap items-center justify-between gap-2.5">
                 <button
-                  onClick={handleCopyManifest}
+                  type="button"
+                  onClick={handleCopyBrief}
                   className="flex-1 py-2 px-3 bg-[#131722] hover:bg-[#1A2030] border border-[#2C3144] text-xs text-[#D4D8E2] hover:text-[#FAF7F0] transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
                 >
                   <Copy className="w-3.5 h-3.5 text-[#E2BA6B]" />
@@ -1826,18 +1690,20 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                 </button>
 
                 <button
+                  type="button"
                   onClick={handleDownloadBrief}
                   className="py-2 px-3 bg-[#131722] hover:bg-[#1A2030] border border-[#2C3144] text-xs text-[#D4D8E2] hover:text-[#FAF7F0] transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
-                  title="Download Mission Brief (.txt)"
+                  title="Download Brief (.txt)"
                 >
                   <Download className="w-3.5 h-3.5 text-[#E2BA6B]" />
                   <span>{isDownloaded ? 'Saved' : 'Download .TXT'}</span>
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => window.print()}
                   className="py-2 px-3 bg-[#131722] hover:bg-[#1A2030] border border-[#2C3144] text-xs text-[#D4D8E2] hover:text-[#FAF7F0] transition-colors flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
-                  title="Print Manifest"
+                  title="Print Brief"
                 >
                   <Printer className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">Print</span>
@@ -1853,14 +1719,15 @@ Direct Phone: ${TGLC_CONTACT.telephone}
             {/* Quick Consultation CTA */}
             <div className="p-5 bg-[#0D1017] border border-[#232736] flex items-center justify-between gap-4">
               <div>
-                <span className="text-xs font-serif text-[#FAF7F0] block">Need direct human consultation?</span>
-                <span className="text-[11px] text-[#8F98AA]">Our Mayfair salon receives principals by confidential appointment.</span>
+                <span className="text-xs font-serif text-[#FAF7F0] block">Prefer to talk it through?</span>
+                <span className="text-[11px] text-[#8F98AA]">Our Mayfair office meets prospective members by appointment.</span>
               </div>
               <button
-                onClick={() => openIntroductionModal('Bespoke Commission Inquiry')}
+                type="button"
+                onClick={() => openIntroductionModal('Commission Studio Enquiry')}
                 className="btn-outline-gold px-4 py-2 text-xs shrink-0 whitespace-nowrap cursor-pointer"
               >
-                Inquire
+                Enquire
               </button>
             </div>
           </div>
@@ -1868,63 +1735,57 @@ Direct Phone: ${TGLC_CONTACT.telephone}
 
         <GoldDivider />
 
-        {/* Interactive Bottom Execution Desk — Tactical Protocols, T-72h Checklist & Direct Ledger Dispatch */}
+        {/* Interactive Bottom Planning Desk */}
         <section className="space-y-6 pt-2">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#232736] pb-5">
             <div className="space-y-1.5">
               <span className="font-mono text-[11px] uppercase tracking-[0.24em] text-[#E2BA6B] block">
-                Mission Execution & Advance Readiness Console
+                Extras &amp; Preparation Checklist
               </span>
               <h2 className="font-serif text-2xl sm:text-4xl text-[#FAF7F0]">
-                Tactical Protocol Add-Ons, Timeline Sign-Off & Direct Dispatch
+                Finishing Touches &amp; Next Steps
               </h2>
             </div>
             <div className="flex items-center gap-3 font-mono text-xs text-[#E2BA6B] tabular-nums shrink-0">
-              <span>Readiness Cleared: {checkedPhases.length} / {OPERATIONAL_ROADMAP.length} Phases</span>
+              <span>Checklist: {checkedStages.length} of {PLANNING_STAGES.length} noted</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left 7 Columns: Toggleable Tactical Protocols + Interactive T-72h Checklist */}
+            {/* Left 7 Columns: Optional Enhancements + Interactive Checklist */}
             <div className="lg:col-span-7 space-y-6">
-              {/* Toggleable Tactical Protocols */}
               <div className="bg-[#0D1017] border border-[#232736] p-6 space-y-4">
                 <div className="flex items-center justify-between gap-2">
                   <span className="font-mono text-xs uppercase tracking-wider text-[#FAF7F0] font-medium">
-                    Optional Tactical & Cellar Enhancements
+                    Optional Finishing Touches
                   </span>
                   <span className="font-mono text-[11px] text-[#E2BA6B] tabular-nums">
-                    {activeAddonItems.length} Active (+£{addonsCost.toLocaleString('en-GB')})
+                    {activeEnhancementItems.length} Selected
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {TACTICAL_ADDONS.map((addon) => {
-                    const isChecked = selectedAddons.includes(addon.id);
+                  {OPTIONAL_ENHANCEMENTS.map((addon) => {
+                    const isChecked = selectedEnhancements.includes(addon.id);
                     return (
                       <button
                         key={addon.id}
                         type="button"
-                        onClick={() => toggleAddon(addon.id)}
+                        onClick={() => toggleEnhancement(addon.id)}
                         className={`p-4 text-left border transition-colors cursor-pointer space-y-1.5 ${
                           isChecked
                             ? 'bg-[#131722] border-[#E2BA6B]'
                             : 'bg-[#090B10] border-[#232736] hover:border-[#8B672B]'
                         }`}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            {isChecked ? (
-                              <CheckSquare className="w-4 h-4 text-[#E2BA6B] shrink-0" />
-                            ) : (
-                              <Square className="w-4 h-4 text-[#8F98AA] shrink-0" />
-                            )}
-                            <span className="text-xs font-serif text-[#FAF7F0] font-medium leading-snug">
-                              {addon.title}
-                            </span>
-                          </div>
-                          <span className="font-mono text-[11px] text-[#E2BA6B] tabular-nums shrink-0">
-                            +£{addon.cost}
+                        <div className="flex items-center gap-2">
+                          {isChecked ? (
+                            <CheckSquare className="w-4 h-4 text-[#E2BA6B] shrink-0" />
+                          ) : (
+                            <Square className="w-4 h-4 text-[#8F98AA] shrink-0" />
+                          )}
+                          <span className="text-xs font-serif text-[#FAF7F0] font-medium leading-snug">
+                            {addon.title}
                           </span>
                         </div>
                         <p className="text-[11px] text-[#D4D8E2] leading-relaxed pl-6">
@@ -1936,30 +1797,29 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                 </div>
               </div>
 
-              {/* Interactive T-72h to T+2h Readiness Checklist */}
               <div className="bg-[#0D1017] border border-[#232736] p-6 space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <span className="font-mono text-xs uppercase tracking-wider text-[#FAF7F0] font-medium block">
-                      Interactive Pre-Mission Readiness Sequence
+                      Planning Checklist
                     </span>
                     <span className="text-[11px] text-[#8F98AA]">
-                      Mark stages as confirmed with your Lifestyle Manager ahead of wheels-up or departure.
+                      Track each step from initial note to final schedule with your lifestyle manager.
                     </span>
                   </div>
                   <span className="font-mono text-xs text-[#E2BA6B] tabular-nums">
-                    {Math.round((checkedPhases.length / OPERATIONAL_ROADMAP.length) * 100)}% Verified
+                    {checkedStages.length} of {PLANNING_STAGES.length} confirmed
                   </span>
                 </div>
 
                 <div className="space-y-2.5">
-                  {OPERATIONAL_ROADMAP.map((step) => {
-                    const isDone = checkedPhases.includes(step.phase);
+                  {PLANNING_STAGES.map((step) => {
+                    const isDone = checkedStages.includes(step.phase);
                     return (
                       <button
                         key={step.phase}
                         type="button"
-                        onClick={() => togglePhaseCheck(step.phase)}
+                        onClick={() => toggleStageCheck(step.phase)}
                         className={`w-full p-3.5 text-left border transition-colors flex items-start gap-3 cursor-pointer ${
                           isDone
                             ? 'bg-[#131722] border-[#8B672B]/80'
@@ -1987,66 +1847,60 @@ Direct Phone: ${TGLC_CONTACT.telephone}
               </div>
             </div>
 
-            {/* Right 5 Columns: Full Itemized Disbursement Ledger & Direct Execution Controls */}
+            {/* Right 5 Columns: Brief Summary & Share Controls */}
             <div className="lg:col-span-5 bg-[#0D1017] border border-[#232736] p-6 space-y-5">
               <div className="pb-3 border-b border-[#232736] flex items-center justify-between">
                 <span className="font-mono text-xs uppercase tracking-widest text-[#E2BA6B] font-medium">
-                  Pass-Through Disbursement Schedule
+                  Brief Summary
                 </span>
-                <span className="font-mono text-[11px] text-[#8F98AA] tabular-nums">{dossierRef}</span>
+                <span className="font-mono text-[11px] text-[#8F98AA] tabular-nums">{briefRef}</span>
               </div>
 
               <div className="space-y-2.5 text-xs">
                 <div className="flex justify-between gap-4 py-1 border-b border-[#1D212F]">
-                  <span className="text-[#D4D8E2]">Base Domain & Buyout Access</span>
-                  <span className="font-mono text-[#FAF7F0] tabular-nums">£{selectedScenario.baseDisbursement.toLocaleString('en-GB')}</span>
+                  <span className="text-[#8F98AA]">Occasion</span>
+                  <span className="text-[#FAF7F0] text-right">{selectedPlan.title}</span>
                 </div>
                 <div className="flex justify-between gap-4 py-1 border-b border-[#1D212F]">
-                  <span className="text-[#D4D8E2]">{selectedFleet.name} ({retainedHours}h)</span>
-                  <span className="font-mono text-[#FAF7F0] tabular-nums">£{(selectedFleet.hourlyCost * retainedHours).toLocaleString('en-GB')}</span>
+                  <span className="text-[#8F98AA]">Travel</span>
+                  <span className="text-[#FAF7F0] text-right">{selectedTransport.name}</span>
                 </div>
                 <div className="flex justify-between gap-4 py-1 border-b border-[#1D212F]">
-                  <span className="text-[#D4D8E2]">{selectedProtocol.level} Escort ({retainedHours}h)</span>
-                  <span className="font-mono text-[#FAF7F0] tabular-nums">£{(selectedProtocol.costPerHour * retainedHours).toLocaleString('en-GB')}</span>
+                  <span className="text-[#8F98AA]">Privacy</span>
+                  <span className="text-[#FAF7F0] text-right">{selectedPrivacy.level}</span>
                 </div>
                 <div className="flex justify-between gap-4 py-1 border-b border-[#1D212F]">
-                  <span className="text-[#D4D8E2]">Specs ({armourLevel.name} · {apronHandling.name.split(' ')[0]})</span>
-                  <span className="font-mono text-[#FAF7F0] tabular-nums">£{(armourLevel.adder + apronHandling.adder).toLocaleString('en-GB')}</span>
+                  <span className="text-[#8F98AA]">Duration</span>
+                  <span className="font-mono text-[#FAF7F0] tabular-nums">{estimatedHours} hours</span>
                 </div>
                 <div className="flex justify-between gap-4 py-1 border-b border-[#1D212F]">
-                  <span className="text-[#D4D8E2]">Cellar & Household Brigade</span>
-                  <span className="font-mono text-[#FAF7F0] tabular-nums">£{(cellarAlloc.adder + staffing.adder).toLocaleString('en-GB')}</span>
-                </div>
-                <div className="flex justify-between gap-4 py-1 border-b border-[#1D212F]">
-                  <span className="text-[#D4D8E2]">Tactical Add-Ons ({activeAddonItems.length} Selected)</span>
-                  <span className="font-mono text-[#FAF7F0] tabular-nums">£{addonsCost.toLocaleString('en-GB')}</span>
-                </div>
-                <div className="pt-3 flex items-baseline justify-between">
-                  <span className="font-serif text-base text-[#FAF7F0]">Estimated Ledger Total (0% Markup)</span>
-                  <span className="font-mono text-xl text-[#E2BA6B] font-bold tabular-nums">
-                    £{totalEstimatedCost.toLocaleString('en-GB')}
-                  </span>
+                  <span className="text-[#8F98AA]">Finishing Touches</span>
+                  <span className="font-mono text-[#FAF7F0] tabular-nums">{activeEnhancementItems.length} selected</span>
                 </div>
               </div>
 
               <div className="p-3.5 bg-[#090B10] border border-[#232736] space-y-1 text-[11px] text-[#D4D8E2] leading-relaxed">
                 <strong className="font-mono text-[10px] uppercase tracking-wider text-[#E2BA6B] block">
-                  Key Staging Deliverables Included
+                  What We Coordinate
                 </strong>
-                {selectedScenario.deliverables.slice(0, 3).map((d, idx) => (
+                {selectedPlan.deliverables.slice(0, 3).map((d, idx) => (
                   <p key={idx}>· {d}</p>
                 ))}
               </div>
 
+              <p className="text-[11px] text-[#8F98AA] leading-relaxed">
+                Pricing depends on dates, suppliers and availability. We share clear options and costs before anything is booked.
+              </p>
+
               <div className="space-y-2.5 pt-2">
                 <button
                   type="button"
-                  onClick={handleTransmit}
-                  disabled={isTransmitting}
+                  onClick={handlePrepareBrief}
+                  disabled={isPreparing}
                   className="btn-gold w-full py-3.5 px-6 text-xs flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Send className="w-3.5 h-3.5 text-[#07080B]" />
-                  <span>{isTransmitting ? 'Transmitting Mandate...' : 'Transmit Mandate to Live Member Portal'}</span>
+                  <span>{isPreparing ? 'Preparing Brief...' : 'Prepare Brief for Our Mayfair Office'}</span>
                 </button>
 
                 <div className="grid grid-cols-2 gap-2.5">
@@ -2060,11 +1914,11 @@ Direct Phone: ${TGLC_CONTACT.telephone}
                   </button>
                   <button
                     type="button"
-                    onClick={handleCopyManifest}
+                    onClick={handleCopyBrief}
                     className="py-2.5 px-3 bg-[#131722] hover:bg-[#1A2030] border border-[#2C3144] text-xs text-[#D4D8E2] hover:text-[#FAF7F0] flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <Copy className="w-3.5 h-3.5 text-[#E2BA6B]" />
-                    <span>{isCopied ? 'Copied' : 'Copy Cipher'}</span>
+                    <span>{isCopied ? 'Copied' : 'Copy Text'}</span>
                   </button>
                 </div>
               </div>
@@ -2073,9 +1927,9 @@ Direct Phone: ${TGLC_CONTACT.telephone}
         </section>
       </div>
 
-      {/* Confirmation Modal when transmitted */}
+      {/* Confirmation Modal when brief is prepared */}
       <AnimatePresence>
-        {isTransmitted && (
+        {isPrepared && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.94 }}
@@ -2089,52 +1943,54 @@ Direct Phone: ${TGLC_CONTACT.telephone}
               </div>
 
               <span className="font-mono text-[11px] uppercase tracking-[0.25em] text-[#E2BA6B] font-medium block tabular-nums">
-                Instruction Logged · Mandate Reference {generatedMandateId || dossierRef}
+                Brief Ready · Reference {generatedBriefId || briefRef}
               </span>
 
               <h3 className="font-serif text-3xl text-[#FAF7F0]">
-                Commission Transmitted to Mayfair Duty Desk
+                Ready for Our Mayfair Team
               </h3>
 
               <p className="text-xs text-[#D4D8E2] leading-relaxed max-w-md mx-auto">
-                Your bespoke instructions for <strong className="text-[#FAF7F0] font-normal">{selectedScenario.title}</strong> with <strong className="text-[#FAF7F0] font-normal">{selectedFleet.name}</strong> under <strong className="text-[#FAF7F0] font-normal">{selectedProtocol.name}</strong> have been securely staged into the live Member Portal triage queue.
+                Your outline for <strong className="text-[#FAF7F0] font-normal">{selectedPlan.title}</strong> with <strong className="text-[#FAF7F0] font-normal">{selectedTransport.name}</strong> is ready to send.
               </p>
 
               <div className="p-4 bg-[#131722] border border-[#232736] text-left text-xs space-y-1.5">
                 <div className="flex justify-between text-[#8F98AA]">
-                  <span>Mandate Reference:</span>
-                  <span className="font-mono text-[#E2BA6B] tabular-nums">{generatedMandateId || dossierRef}</span>
+                  <span>Reference:</span>
+                  <span className="font-mono text-[#E2BA6B] tabular-nums">{generatedBriefId || briefRef}</span>
                 </div>
                 <div className="flex justify-between text-[#8F98AA]">
-                  <span>Operational Codename:</span>
-                  <span className="font-mono text-[#FAF7F0]">{codename}</span>
+                  <span>Label:</span>
+                  <span className="font-mono text-[#FAF7F0]">{referenceLabel}</span>
                 </div>
                 <div className="flex justify-between text-[#8F98AA]">
-                  <span>Estimated Total (0% Markup):</span>
-                  <span className="font-mono text-[#E2BA6B] font-bold tabular-nums">£{totalEstimatedCost.toLocaleString('en-GB')}</span>
+                  <span>Preferred Dates:</span>
+                  <span className="text-[#FAF7F0]">{targetDate}</span>
                 </div>
                 <div className="flex justify-between text-[#8F98AA]">
-                  <span>Assigned Duty Directors:</span>
-                  <span className="text-[#FAF7F0]">Mickell Washington, Leance Djedje & Melize Nastaasia</span>
+                  <span>Mayfair Office:</span>
+                  <span className="text-[#FAF7F0]">{TGLC_CONTACT.telephone}</span>
                 </div>
               </div>
 
               <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
                 <button
-                  onClick={() => setIsTransmitted(false)}
+                  type="button"
+                  onClick={() => setIsPrepared(false)}
                   className="btn-gold px-7 py-3 text-xs cursor-pointer"
                 >
                   Return to Studio
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
-                    setIsTransmitted(false);
-                    navigateTo('member-portal');
+                    setIsPrepared(false);
+                    openIntroductionModal(`Commission Brief (${generatedBriefId || briefRef}): ${selectedPlan.title}`);
                   }}
                   className="btn-outline-gold px-6 py-3 text-xs flex items-center gap-1.5 cursor-pointer"
                 >
                   <Lock className="w-3.5 h-3.5 text-[#E2BA6B]" />
-                  <span>View in Member Portal</span>
+                  <span>Send via Enquiry Form</span>
                 </button>
               </div>
             </motion.div>

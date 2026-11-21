@@ -1,9 +1,11 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { useNavigation } from '../../context/NavigationContext';
+import { PageRoute } from '../../types';
 import { SERVICES_DATA, JOURNAL_ARTICLES, TGLC_CONTACT } from '../../data/tglcData';
 import { ArrowLeft } from 'lucide-react';
 import { GoldDivider } from '../common/GoldDivider';
+import { Link } from '../common/Link';
+import { SmartImage } from '../common/SmartImage';
 
 interface LegalPagesProps {
   page:
@@ -58,34 +60,36 @@ const LEGAL_HERO_META: Record<
 };
 
 export const LegalPages: React.FC<LegalPagesProps> = ({ page }) => {
-  const { navigateTo } = useNavigation();
   const meta = LEGAL_HERO_META[page];
 
   return (
-    <div className="bg-[#08090C] text-[#F4F1EA] pt-6 sm:pt-8 pb-14 overflow-hidden">
+    <div className="bg-[#08090C] text-[#F4F1EA] pt-24 sm:pt-28 pb-14 overflow-hidden">
       <div className="max-w-5xl mx-auto px-5 sm:px-8 space-y-8">
         {/* Back Link */}
-        <button
-          onClick={() => navigateTo('home')}
+        <Link
+          page="home"
           className="inline-flex items-center gap-2 text-xs tracking-wide text-[#CFA85E] hover:text-[#DDB872] transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>Return to Home</span>
-        </button>
+        </Link>
 
         {/* Cinematic Photographic Header */}
         <section className="relative min-h-[260px] sm:min-h-[320px] flex items-end overflow-hidden border border-[#242630] bg-[#12141A]">
-          <motion.img
-            initial={{ scale: 1.05, opacity: 0.92 }}
-            animate={{ scale: [1.05, 1, 1.04], opacity: 1 }}
-            transition={{
-              scale: { duration: 22, repeat: Infinity, ease: 'easeInOut' },
-              opacity: { duration: 0.9 },
-            }}
-            src="/assets/aistudio/tglc_st_james_salon.jpg"
-            alt="TGLC House Governance & Archives"
-            className="absolute inset-0 w-full h-full object-cover brightness-105 contrast-105"
-          />
+          <motion.div
+            initial={{ scale: 1.08 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 8, ease: 'easeOut' }}
+            className="absolute inset-0 w-full h-full"
+          >
+            <SmartImage
+              src="/assets/aistudio/tglc_st_james_salon.jpg"
+              alt="TGLC House Governance & Archives"
+              sizes="(max-width: 1024px) 100vw, 1024px"
+              priority
+              className="w-full h-full object-cover brightness-105 contrast-105"
+            />
+          </motion.div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#08090C] via-[#08090C]/50 to-[#08090C]/25" />
 
           <motion.div
@@ -191,11 +195,11 @@ export const LegalPages: React.FC<LegalPagesProps> = ({ page }) => {
             className="space-y-6 text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light bg-[#12141A] border border-[#242630] p-7 sm:p-10"
           >
             <p>
-              Our website relies solely on minimal session storage needed for secure navigation, member portal states, and consent preferences.
+              Our website relies solely on minimal session storage needed for secure navigation and consent preferences.
             </p>
             <h3 className="font-serif text-xl text-[#F4F1EA] pt-2">1. Strictly Necessary Identifiers</h3>
             <p>
-              Maintain preview gate state, active inquiry forms, and essential routing stability without gathering cross-site user advertising identifiers.
+              Maintain active inquiry forms and essential routing stability without gathering cross-site user advertising identifiers.
             </p>
             <h3 className="font-serif text-xl text-[#F4F1EA] pt-2">2. Managing Preferences</h3>
             <p>
@@ -261,22 +265,24 @@ export const LegalPages: React.FC<LegalPagesProps> = ({ page }) => {
                   ['ethos', 'Our Ethos & Principles'],
                   ['approach', 'Our Approach'],
                   ['network', 'The TGLC Network'],
-                  ['our-london', 'Our London & Map'],
+                  ['our-london', 'Our London'],
                   ['privacy-discretion', 'Privacy & Discretion'],
-                  ['membership', 'Membership Charters'],
+                  ['cultural-traditions', 'Cultural, Islamic & Global Traditions'],
+                  ['membership', 'Join TGLC'],
+                  ['case-studies', 'Signature Experiences'],
                   ['calendar', 'The London Calendar'],
                   ['journal', 'The TGLC Journal'],
-                  ['member-portal', 'Member Access'],
-                  ['contact', 'Contact & Mayfair Office'],
+                  ['member-portal', 'Members'],
+                  ['contact', 'Contact'],
                   ['faq', 'Frequently Asked Questions'],
                 ].map(([route, label]) => (
                   <li key={route}>
-                    <button
-                      onClick={() => navigateTo(route as LegalPagesProps['page'])}
-                      className="hover:text-[#DDB872] transition-colors text-left"
+                    <Link
+                      page={route as PageRoute}
+                      className="hover:text-[#DDB872] transition-colors text-left inline-block"
                     >
                       {label}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -288,18 +294,19 @@ export const LegalPages: React.FC<LegalPagesProps> = ({ page }) => {
               </h4>
               <ul className="space-y-2 text-[#9C968A]">
                 <li>
-                  <button onClick={() => navigateTo('services')} className="hover:text-[#DDB872]">
+                  <Link page="services" className="hover:text-[#DDB872] inline-block">
                     All Seven Services
-                  </button>
+                  </Link>
                 </li>
                 {SERVICES_DATA.map((s) => (
                   <li key={s.id}>
-                    <button
-                      onClick={() => navigateTo('service-detail', { serviceId: s.id })}
-                      className="hover:text-[#DDB872] text-left"
+                    <Link
+                      page="service-detail"
+                      params={{ serviceId: s.id }}
+                      className="hover:text-[#DDB872] text-left inline-block"
                     >
                       {s.title}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -312,12 +319,13 @@ export const LegalPages: React.FC<LegalPagesProps> = ({ page }) => {
               <ul className="space-y-2 text-[#9C968A]">
                 {JOURNAL_ARTICLES.slice(0, 8).map((a) => (
                   <li key={a.slug}>
-                    <button
-                      onClick={() => navigateTo('journal-article', { articleSlug: a.slug })}
+                    <Link
+                      page="journal-article"
+                      params={{ articleSlug: a.slug }}
                       className="hover:text-[#DDB872] line-clamp-1 text-left"
                     >
                       {a.title}
-                    </button>
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -331,12 +339,12 @@ export const LegalPages: React.FC<LegalPagesProps> = ({ page }) => {
               “The door you are seeking is presently closed.”
             </p>
             <div className="pt-2 flex flex-wrap justify-center gap-4">
-              <button onClick={() => navigateTo('home')} className="btn-gold px-6 py-3 text-xs">
+              <Link page="home" className="btn-gold inline-flex items-center justify-center px-6 py-3 text-xs">
                 Return to Homepage
-              </button>
-              <button onClick={() => navigateTo('services')} className="btn-outline-gold px-6 py-3 text-xs">
+              </Link>
+              <Link page="services" className="btn-outline-gold inline-flex items-center justify-center px-6 py-3 text-xs">
                 View Practices
-              </button>
+              </Link>
             </div>
           </div>
         )}
@@ -354,10 +362,11 @@ export const LegalPages: React.FC<LegalPagesProps> = ({ page }) => {
             className="bg-[#12141A] border border-[#242630] hover:border-[#8B672B] transition-colors overflow-hidden group"
           >
             <div className="aspect-[16/10] overflow-hidden">
-              <img
+              <SmartImage
                 src="/assets/aistudio/hero_luxury_london_residence_1794298893032.jpg"
                 alt="Mayfair Private Townhouse Architecture"
-                className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
               />
             </div>
             <div className="px-5 py-3.5 border-t border-[#20232E] flex items-center justify-between text-xs text-[#9C968A]">
@@ -375,15 +384,16 @@ export const LegalPages: React.FC<LegalPagesProps> = ({ page }) => {
             className="bg-[#12141A] border border-[#242630] hover:border-[#8B672B] transition-colors overflow-hidden group"
           >
             <div className="aspect-[16/10] overflow-hidden">
-              <img
+              <SmartImage
                 src="/assets/aistudio/florence_palazzo_courtyard.jpg"
                 alt="European Cross-Border Private Hospitality"
-                className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
               />
             </div>
             <div className="px-5 py-3.5 border-t border-[#20232E] flex items-center justify-between text-xs text-[#9C968A]">
-              <span>International Fiduciary Protocol</span>
-              <span className="text-[#CFA85E]">Geneva · Paris · Milan</span>
+              <span>International Support</span>
+              <span className="text-[#CFA85E]">London · Worldwide</span>
             </div>
           </motion.div>
         </section>

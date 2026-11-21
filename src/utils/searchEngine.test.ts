@@ -61,3 +61,35 @@ test('searchTGLC returns proper routing metadata for navigation', () => {
   assert.ok(first.meta, 'Must have unboxed meta text');
   assert.ok(first.snippet, 'Must have descriptive snippet');
 });
+
+test('searchTGLC does not return removed Member Portal or Sub-Rosa results', () => {
+  const portalResults = searchTGLC('portal');
+  assert.equal(
+    portalResults.some(r => r.targetRoute === 'member-portal' || r.id === 'consortium-portal'),
+    false,
+    'Search must not return removed member portal entries'
+  );
+
+  const rosaResults = searchTGLC('rosa');
+  assert.equal(rosaResults.length, 0, 'Search must not return removed Sub-Rosa copy');
+
+  const subRosaResults = searchTGLC('sub-rosa');
+  assert.equal(
+    subRosaResults.some(r => r.id === 'consortium-sub-rosa' || r.title.toLowerCase().includes('sub-rosa')),
+    false,
+    'Search must not return removed Sub-Rosa entry'
+  );
+
+  const northoltResults = searchTGLC('Northolt');
+  assert.equal(northoltResults.length, 0, 'Search must not return removed RAF Northolt copy');
+});
+
+test('searchTGLC indexes Hidden London and Signature Experiences', () => {
+  const hiddenResults = searchTGLC('Hidden London');
+  assert.ok(hiddenResults.length > 0, 'Expected results for Hidden London');
+  assert.ok(hiddenResults.some(r => r.targetRoute === 'hidden-london'), 'Expected Hidden London hub route');
+
+  const expResults = searchTGLC('Signature Experiences');
+  assert.ok(expResults.length > 0, 'Expected results for Signature Experiences');
+  assert.ok(expResults.some(r => r.targetRoute === 'case-studies'), 'Expected Signature Experiences route');
+});

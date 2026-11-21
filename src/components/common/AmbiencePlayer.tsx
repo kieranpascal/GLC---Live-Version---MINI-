@@ -18,14 +18,14 @@ const AMBIENCE_OPTIONS: { id: AmbienceMode; label: string; sub: string; icon: an
   },
   {
     id: 'nocturne',
-    label: 'Sub-Rosa Nocturne',
-    sub: 'Square Mile 55Hz deep vault drone & vinyl surface',
+    label: 'Mayfair Evening',
+    sub: 'Warm low tone and gentle vinyl crackle',
     icon: Moon,
   },
   {
     id: 'cabin',
-    label: 'Private Cabin Aviation',
-    sub: 'Bombardier airflow & Farnborough runway whisper',
+    label: 'Private Cabin',
+    sub: 'Quiet cabin airflow and distant rain',
     icon: Compass,
   },
 ];
@@ -39,8 +39,8 @@ const THEME_OPTIONS: { id: LuxuryThemeMode; label: string; desc: string; preview
   },
   {
     id: 'nocturne-stealth',
-    label: 'Nocturne Stealth',
-    desc: 'Matte carbon with cold titanium accents',
+    label: 'Midnight Slate',
+    desc: 'Matte carbon with cool slate accents',
     previewColor: '#7E8B85',
   },
   {

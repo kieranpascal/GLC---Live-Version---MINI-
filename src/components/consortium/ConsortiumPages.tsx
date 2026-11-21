@@ -3,54 +3,55 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigation } from '../../context/NavigationContext';
 import { TEAM_MEMBERS, ETHOS_PRINCIPLES, APPROACH_STEPS, LONDON_NEIGHBOURHOODS } from '../../data/tglcData';
 import { GoldDivider } from '../common/GoldDivider';
-import { PillarGridSkeleton } from '../common/EditorialSkeletons';
+import { Link } from '../common/Link';
+import { SmartImage } from '../common/SmartImage';
+import { Reveal, RevealItem } from '../common/Reveal';
+import { EditorialHeroCarousel } from '../common/EditorialHeroCarousel';
+import { CONSORTIUM_SUBPAGE_SLIDES } from '../../utils/carouselSlides';
+import { PageRoute } from '../../types';
 import {
   ArrowUpRight,
   Shield,
-  Award,
   Lock,
   Check,
   Compass,
   ChevronLeft,
   ChevronRight,
-  Ticket,
-  Building2,
-  Car,
-  Plane,
-  Gem,
+  EyeOff,
 } from 'lucide-react';
 import { ConsortiumLocationsMap } from './ConsortiumLocationsMap';
+import { ConsortiumConciergeSection } from './ConsortiumConciergeSection';
 
 const CONSORTIUM_HERO_SLIDES = [
   {
     image: '/assets/aistudio/consortium_overview_head.jpg',
-    title: 'Albemarle Drawing Room',
-    caption: 'Private chambers and reception at 45 Albemarle Street, Mayfair',
+    title: '45 Albemarle Street',
+    caption: 'Our Mayfair office at 45 Albemarle Street, London',
   },
   {
     image: '/assets/aistudio/tglc_st_james_salon.jpg',
-    title: 'St James’s Council Chambers',
-    caption: 'Curated architectural stewardship and quiet family governance',
+    title: 'Mayfair Meeting Room',
+    caption: 'Quiet space for private conversations in London',
   },
   {
     image: '/assets/aistudio/consortium_ethos_sanctuary.jpg',
-    title: 'Historic Private Library',
-    caption: 'Discreet consultation spaces preserved away from public view',
+    title: 'Quiet Reading Room',
+    caption: 'A calm space away from the rush of central London',
   },
   {
     image: '/assets/aistudio/consortium_approach_board.jpg',
-    title: 'Advisory Boardroom',
-    caption: 'Strategic lifestyle coordination and multi-generational oversight',
+    title: 'London Office',
+    caption: 'Personal planning for travel, homes and events',
   },
   {
     image: '/assets/aistudio/consortium_privacy_vault.jpg',
-    title: 'Faraday Confidentiality Enclosure',
-    caption: 'Electronic countermeasures and non-disclosure standards',
+    title: 'Private Consultation Space',
+    caption: 'Discretion and care built into every conversation',
   },
 ];
 
 interface ConsortiumPagesProps {
-  subPage?: 'overview' | 'about' | 'ethos' | 'approach' | 'network' | 'our-london' | 'privacy';
+  subPage?: 'overview' | 'concierge' | 'about' | 'ethos' | 'approach' | 'network' | 'our-london' | 'privacy';
 }
 
 const REVEAL_SECTION = {
@@ -61,67 +62,122 @@ const REVEAL_SECTION = {
 };
 
 const HERO_KEN_BURNS = {
-  initial: { scale: 1.05, opacity: 0.9 },
-  animate: { scale: [1.05, 1, 1.04], opacity: 1 },
-  transition: {
-    scale: { duration: 22, repeat: Infinity, ease: 'easeInOut' as const },
-    opacity: { duration: 0.9, ease: [0.16, 1, 0.3, 1] as const },
-  },
+  initial: { scale: 1.08 },
+  animate: { scale: 1 },
+  transition: { duration: 8, ease: 'easeOut' as const },
 };
 
 const SUB_TABS: {
-  key: NonNullable<ConsortiumPagesProps['subPage']>;
-  route: Parameters<ReturnType<typeof useNavigation>['navigateTo']>[0];
+  key: NonNullable<ConsortiumPagesProps['subPage']> | 'cultural-traditions';
+  route: PageRoute;
   label: string;
 }[] = [
-  { key: 'overview', route: 'consortium', label: 'Consortium Overview' },
-  { key: 'about', route: 'about', label: 'About & Leadership' },
+  { key: 'overview', route: 'consortium', label: 'Overview' },
+  { key: 'concierge', route: 'consortium-concierge', label: 'Concierge' },
+  { key: 'about', route: 'about', label: 'About TGLC' },
   { key: 'ethos', route: 'ethos', label: 'Our Ethos' },
   { key: 'approach', route: 'approach', label: 'Our Approach' },
-  { key: 'network', route: 'network', label: 'The TGLC Network' },
-  { key: 'our-london', route: 'our-london', label: 'Our London & Map' },
+  { key: 'network', route: 'network', label: 'Our Network' },
+  { key: 'our-london', route: 'our-london', label: 'Our London' },
   { key: 'privacy', route: 'privacy-discretion', label: 'Privacy & Discretion' },
+  { key: 'cultural-traditions', route: 'cultural-traditions', label: 'Cultural Traditions' },
+];
+
+const OVERVIEW_LINKS: {
+  route: PageRoute;
+  kicker: string;
+  title: string;
+  description: string;
+}[] = [
+  {
+    route: 'about',
+    kicker: 'Who We Are',
+    title: 'About TGLC',
+    description: 'Meet the people running our Mayfair office and learn why we started.',
+  },
+  {
+    route: 'ethos',
+    kicker: 'What Guides Us',
+    title: 'Our Ethos',
+    description: 'The five clear principles that shape every conversation and booking.',
+  },
+  {
+    route: 'approach',
+    kicker: 'How We Work',
+    title: 'Our Approach',
+    description: 'See how membership begins and how we look after your requests.',
+  },
+];
+
+const NETWORK_CITIES = [
+  'London',
+  'Paris',
+  'Geneva',
+  'Milan',
+  'Monaco',
+  'New York',
+  'Tokyo',
+  'Singapore',
+];
+
+const PRIVACY_COMMITMENTS = [
+  {
+    icon: Lock,
+    title: 'Only what is needed',
+    line: "We only share what's needed to make your plans happen.",
+  },
+  {
+    icon: EyeOff,
+    title: 'Never used for publicity',
+    line: 'We never use your name or photos for publicity.',
+  },
+  {
+    icon: Shield,
+    title: 'Kept within your team',
+    line: 'Your details stay with the people looking after you.',
+  },
+  {
+    icon: Check,
+    title: 'Full control of your data',
+    line: 'You can ask us to delete your information at any time.',
+  },
 ];
 
 export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'overview' }) => {
-  const { navigateTo, openIntroductionModal } = useNavigation();
+  const { openIntroductionModal } = useNavigation();
   const [selectedLondonArea, setSelectedLondonArea] = useState(0);
   const [heroSlide, setHeroSlide] = useState(0);
+  const [hasHeroAdvanced, setHasHeroAdvanced] = useState(false);
   const [isHeroPaused, setIsHeroPaused] = useState(false);
-  const [isPillarsLoading, setIsPillarsLoading] = useState(true);
 
   const activeTabLabel = SUB_TABS.find((t) => t.key === subPage)?.label ?? 'Overview';
 
   useEffect(() => {
-    if (subPage !== 'overview') return;
-    setIsPillarsLoading(true);
-    const timer = window.setTimeout(() => {
-      setIsPillarsLoading(false);
-    }, 250);
-    return () => window.clearTimeout(timer);
-  }, [subPage]);
-
-  useEffect(() => {
     if (isHeroPaused) return;
     const timer = setInterval(() => {
+      setHasHeroAdvanced(true);
       setHeroSlide((prev) => (prev + 1) % CONSORTIUM_HERO_SLIDES.length);
     }, 5500);
     return () => clearInterval(timer);
   }, [isHeroPaused]);
 
+  const nextHeroSlideSrc = hasHeroAdvanced
+    ? CONSORTIUM_HERO_SLIDES[(heroSlide + 1) % CONSORTIUM_HERO_SLIDES.length].image
+    : null;
+
   return (
-    <div className="bg-[#07080B] text-[#FAF7F0] pt-6 sm:pt-8 pb-14 overflow-hidden">
+    <div className="bg-[#07080B] text-[#FAF7F0] pt-24 sm:pt-28 pb-14 overflow-hidden">
       {/* Compact Sub-Navigation Rail */}
       <div className="max-w-7xl mx-auto px-5 sm:px-8 mb-6">
         <div className="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-[#1A1C24]">
           <div className="flex items-center gap-2 text-xs tracking-wide text-[#CFA85E]">
-            <button onClick={() => navigateTo('home')} className="hover:text-[#F4F1EA] transition-colors">
+            <Link page="home" className="hover:text-[#F4F1EA] transition-colors">
               Home
-            </button>
+            </Link>
             <span className="text-[#8B672B]">/</span>
-            <button onClick={() => navigateTo('consortium')} className="text-[#D9D4CA] hover:text-[#F4F1EA] transition-colors">
+            <Link page="consortium" className="text-[#D9D4CA] hover:text-[#F4F1EA] transition-colors">
               The Consortium
-            </button>
+            </Link>
             {subPage !== 'overview' && (
               <>
                 <span className="text-[#8B672B]">/</span>
@@ -130,7 +186,7 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
             )}
           </div>
           <span className="text-[11px] text-[#9C968A] hidden sm:inline tabular-nums">
-            TGLC House · 3rd Floor, 45 Albemarle Street, Mayfair
+            3rd Floor, 45 Albemarle Street, London W1S 4JL
           </span>
         </div>
 
@@ -138,9 +194,9 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
           {SUB_TABS.map((tab) => {
             const active = subPage === tab.key;
             return (
-              <button
+              <Link
                 key={tab.key}
-                onClick={() => navigateTo(tab.route)}
+                page={tab.route}
                 className={`relative px-3.5 py-2 whitespace-nowrap transition-colors ${
                   active ? 'text-[#F4F1EA] font-medium' : 'text-[#9C968A] hover:text-[#F4F1EA]'
                 }`}
@@ -153,7 +209,7 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                     transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   />
                 )}
-              </button>
+              </Link>
             );
           })}
         </div>
@@ -174,23 +230,28 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
               <AnimatePresence initial={false}>
                 <motion.div
                   key={heroSlide}
-                  initial={{ opacity: 0, scale: 1.08 }}
-                  animate={{ opacity: 1, scale: [1.08, 1, 1.04] }}
-                  exit={{ opacity: 0, scale: 1.02 }}
-                  transition={{
-                    opacity: { duration: 1.1, ease: 'easeInOut' },
-                    scale: { duration: 18, repeat: Infinity, ease: 'easeInOut' }
-                  }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.0, ease: 'easeInOut' }}
                   className="absolute inset-0"
                 >
-                  <img
-                    src={CONSORTIUM_HERO_SLIDES[heroSlide].image}
-                    alt={CONSORTIUM_HERO_SLIDES[heroSlide].title}
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-105 contrast-105"
-                  />
+                  <motion.div {...HERO_KEN_BURNS} className="w-full h-full">
+                    <SmartImage
+                      src={CONSORTIUM_HERO_SLIDES[heroSlide].image}
+                      alt={CONSORTIUM_HERO_SLIDES[heroSlide].title}
+                      sizes="(max-width: 1280px) 100vw, 1280px"
+                      priority={heroSlide === 0}
+                      className="w-full h-full object-cover brightness-105 contrast-105"
+                    />
+                  </motion.div>
                 </motion.div>
               </AnimatePresence>
+              {nextHeroSlideSrc && (
+                <div aria-hidden="true" className="hidden">
+                  <SmartImage src={nextHeroSlideSrc} alt="" sizes="(max-width: 1280px) 100vw, 1280px" />
+                </div>
+              )}
               <div className="absolute inset-0 bg-gradient-to-t from-[#07080B] via-[#07080B]/45 to-[#07080B]/25" />
               <div className="absolute inset-0 bg-gradient-to-r from-[#07080B]/90 via-[#07080B]/45 to-transparent hidden sm:block" />
 
@@ -198,7 +259,10 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
               <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setHeroSlide((prev) => (prev - 1 + CONSORTIUM_HERO_SLIDES.length) % CONSORTIUM_HERO_SLIDES.length)}
+                  onClick={() => {
+                    setHasHeroAdvanced(true);
+                    setHeroSlide((prev) => (prev - 1 + CONSORTIUM_HERO_SLIDES.length) % CONSORTIUM_HERO_SLIDES.length);
+                  }}
                   className="p-2 bg-[#07080B]/75 hover:bg-[#B98633] text-[#E2BA6B] hover:text-[#07080B] border border-[#B98633]/30 backdrop-blur-md transition-all"
                   aria-label="Previous image"
                 >
@@ -209,7 +273,10 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                 </div>
                 <button
                   type="button"
-                  onClick={() => setHeroSlide((prev) => (prev + 1) % CONSORTIUM_HERO_SLIDES.length)}
+                  onClick={() => {
+                    setHasHeroAdvanced(true);
+                    setHeroSlide((prev) => (prev + 1) % CONSORTIUM_HERO_SLIDES.length);
+                  }}
                   className="p-2 bg-[#07080B]/75 hover:bg-[#B98633] text-[#E2BA6B] hover:text-[#07080B] border border-[#B98633]/30 backdrop-blur-md transition-all"
                   aria-label="Next image"
                 >
@@ -222,7 +289,10 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                 {CONSORTIUM_HERO_SLIDES.map((slide, idx) => (
                   <button
                     key={slide.title}
-                    onClick={() => setHeroSlide(idx)}
+                    onClick={() => {
+                      setHasHeroAdvanced(true);
+                      setHeroSlide(idx);
+                    }}
                     className={`h-0.5 transition-all ${
                       idx === heroSlide ? 'bg-[#E2BA6B]' : 'bg-[#FAF7F0]/25 hover:bg-[#FAF7F0]/60'
                     }`}
@@ -238,479 +308,139 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                 className="relative z-10 p-6 sm:p-10 max-w-4xl space-y-3.5"
               >
                 <span className="tglc-kicker text-[11px] block">
-                  Mayfair, London W1S 4JL · Private Office
+                  Mayfair, London
                 </span>
                 <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#FAF7F0] leading-[1.06] text-balance">
-                  A private house built on trust, instinct, and sound judgement.
+                  The Global Luxury Consortium
                 </h1>
                 <p className="font-serif italic text-lg sm:text-2xl text-[#E2BA6B] leading-relaxed">
-                  “Opening doors that don’t usually exist — discretion by default, British poise by nature.”
+                  “Opening doors that don’t usually exist.”
                 </p>
                 <p className="tglc-prose text-sm sm:text-base max-w-2xl">
-                  The Global Luxury Consortium exists for individuals, corporate teams, and families who want a calm, accountable human point of contact in London and abroad. From our office at 3rd Floor, 45 Albemarle Street, we operate on a simple conviction: luxury is not defined by how much somebody spends, whether a request is £100 or £100,000, but by how exceptionally they are treated.
+                  A private concierge in Mayfair, helping people live, travel and celebrate well.
                 </p>
               </motion.div>
             </div>
           </section>
 
-          {/* Editorial Narrative + Paired Large Photographs */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-10">
-            <motion.div {...REVEAL_SECTION} className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-              <div className="lg:col-span-6 space-y-4">
-                <span className="text-xs uppercase tracking-[0.22em] text-[#CFA85E] font-medium block">
-                  Life Behind Unmarked Doors
-                </span>
-                <h2 className="font-serif text-3xl sm:text-4xl text-[#F4F1EA] leading-tight">
-                  Stewardship shaped by human relationships, never software queues.
-                </h2>
-                <p className="text-sm sm:text-base text-[#C8C2B7] leading-relaxed font-light">
-                  When an executive flight arrives ahead of schedule, an anniversary table seems fully booked, or a confidential client visit requires three days of five-star hospitality across London, our directors do not log your brief into an automated portal. We lift the telephone and speak directly with the trusted people who run those rooms.
-                </p>
-                <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                  We work closely with private individuals, visiting families, and busy executive assistants alike—bringing the same patience, respect, and quiet rigour to a thoughtful dinner recommendation as we bring to multi-city aviation and estate arrangements.
-                </p>
-                <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                  Nothing is templated or passed down to anonymous call centres. Whether securing VIP Wembley or Ringside suites, sourcing discreet Belgravia stays, or coordinating tarmac chauffeurs at sunrise, every detail is weighed carefully behind our Albemarle Street doors.
-                </p>
-              </div>
-              <div className="lg:col-span-6 overflow-hidden border border-[#242630] bg-[#12141A] group">
-                <div className="aspect-[16/10] w-full overflow-hidden">
-                  <img
-                    src="/assets/aistudio/hero_luxury_london_residence_1794298893032.jpg"
-                    alt="Mayfair private Georgian residence drawing room"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-                <div className="px-5 py-3.5 border-t border-[#222530] flex flex-wrap items-center justify-between gap-2 text-xs text-[#D4D8E2]">
-                  <span>Townhouse preparation and private arrival staging coordinated ahead of household check-in</span>
-                  <span className="text-[#E2BA6B] font-mono text-[11px]">Mayfair · Belgravia SW1</span>
-                </div>
-              </div>
+          {/* Three Short Link Cards to About, Ethos, and Approach */}
+          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-6">
+            <motion.div {...REVEAL_SECTION} className="border-b border-[#1D1F28] pb-4">
+              <span className="text-xs uppercase tracking-[0.22em] text-[#CFA85E] font-medium block mb-1">
+                Inside TGLC
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl text-[#F4F1EA]">
+                Who we are and how we work
+              </h2>
             </motion.div>
 
-            <motion.div {...REVEAL_SECTION} className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
-              <div className="lg:col-span-6 order-2 lg:order-1 overflow-hidden border border-[#242630] bg-[#12141A] group">
-                <div className="aspect-[16/10] w-full overflow-hidden">
-                  <img
-                    src="/assets/aistudio/florence_palazzo_courtyard.jpg"
-                    alt="European palazzo courtyard privately prepared for TGLC members"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-                <div className="px-5 py-3.5 border-t border-[#222530] flex flex-wrap items-center justify-between gap-2 text-xs text-[#D4D8E2]">
-                  <span>Private Florentine courtyards and European sanctuaries coordinated for visiting households</span>
-                  <span className="text-[#E2BA6B] font-mono text-[11px]">Florence · Geneva · Paris</span>
-                </div>
-              </div>
-              <div className="lg:col-span-6 order-1 lg:order-2 space-y-4">
-                <span className="text-xs uppercase tracking-[0.22em] text-[#CFA85E] font-medium block">
-                  Borderless Continuity
-                </span>
-                <h2 className="font-serif text-3xl sm:text-4xl text-[#F4F1EA] leading-tight">
-                  A single standard of quiet precision across borders.
-                </h2>
-                <p className="text-sm sm:text-base text-[#C8C2B7] leading-relaxed font-light">
-                  Although London is our philosophical and operational home, client life moves continuously between Europe, North America, Asia, and the Pacific. Rather than handing you off to detached third-party desks, a single relationship-led point of contact stays with your itinerary from departure to return.
-                </p>
-                <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                  Our international coordination is led personally by Mickell Washington, Leance Djedje, and Melize Nastaasia from 45 Albemarle Street—preserving the exact tone, clear pricing transparency, and quiet security discipline established in Mayfair.
-                </p>
-              </div>
-            </motion.div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {OVERVIEW_LINKS.map((card, i) => (
+                <motion.div
+                  key={card.route}
+                  initial={{ opacity: 0.9, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.01 }}
+                  transition={{ duration: 0.48, delay: i * 0.06 }}
+                  whileHover={{ y: -4 }}
+                  className="h-full"
+                >
+                  <Link
+                    page={card.route}
+                    className="group relative p-7 bg-[#12141A] border border-[#242630] hover:border-[#CFA85E]/80 transition-colors flex flex-col justify-between space-y-6 overflow-hidden h-full"
+                  >
+                    <div className="space-y-3">
+                      <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#CFA85E] block">
+                        {card.kicker}
+                      </span>
+                      <h3 className="font-serif text-2xl text-[#FAF7F0] group-hover:text-[#E2BA6B] transition-colors">
+                        {card.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-[#D4D8E2] leading-relaxed font-light">
+                        {card.description}
+                      </p>
+                    </div>
+                    <div className="pt-4 border-t border-[#1D202A] flex items-center justify-between text-xs text-[#E2BA6B]">
+                      <span>Read more</span>
+                      <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </div>
+                    <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#E2BA6B] scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
           </section>
 
           <GoldDivider />
 
-          {/* Life in the House — Visual Triptych Gallery */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-6">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#1D1F28] pb-4">
-              <div>
-                <span className="text-xs uppercase tracking-[0.22em] text-[#CFA85E] font-medium block mb-1">
-                  Visual Chronicle
-                </span>
-                <h2 className="font-serif text-3xl text-[#F4F1EA]">
-                  Morning Dispatch to Late-Evening Sanctums
-                </h2>
-              </div>
-              <p className="text-xs sm:text-sm text-[#9C968A] max-w-md font-light">
-                Every hour of a household’s week supported with serene attention across Mayfair, Savile Row, and Royal Covent Garden.
-              </p>
-            </div>
+          {/* Flagship 24/7 Bespoke Concierge Section */}
+          <ConsortiumConciergeSection variant="embedded" />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  img: '/assets/aistudio/rolls-cullian-featured_a41abfa9.webp',
-                  kicker: 'Precision Transit',
-                  title: 'Wing-to-Townhouse Chauffeur',
-                  caption: 'Direct tarmac coordination out of Farnborough, Northolt, and Heathrow VIP suites in executive and luxury fleets.',
-                  action: () => navigateTo('service-detail', { serviceId: 'transport-security' }),
-                },
-                {
-                  img: '/assets/aistudio/savile_row_bespoke.jpg',
-                  kicker: 'Master Commissions',
-                  title: 'Savile Row & Bond Street Suites',
-                  caption: 'Private off-hour dressing salons and independent master cutters attending your London residence.',
-                  action: () => navigateTo('service-detail', { serviceId: 'luxury-sourcing' }),
-                },
-                {
-                  img: '/assets/aistudio/mayfair_fine_dining.jpg',
-                  kicker: 'Evening Hospitality',
-                  title: 'Unlisted Tables & Wine Vaults',
-                  caption: 'Acoustic corner alcoves, private dining rooms, and thoughtfully curated evenings arranged by personal introduction.',
-                  action: () => navigateTo('service-detail', { serviceId: 'dining-nightlife' }),
-                },
-                {
-                  img: '/assets/aistudio/wembley_vip_hospitality.jpg',
-                  kicker: 'Triple Up · Live Access',
-                  title: 'VIP Suites, Derbies & Fight Nights',
-                  caption: 'Official hospitality suites across Wembley, Premier League grounds, Wimbledon, and Championship Boxing—paired seamlessly with stays and chauffeurs.',
-                  action: () => navigateTo('service-detail', { serviceId: 'experiences-culture' }),
-                },
-                {
-                  img: '/assets/aistudio/corporate_ea_boardroom.jpg',
-                  kicker: 'Executive & EA Desk',
-                  title: 'Seamless Corporate Briefings',
-                  caption: 'Dedicated day-and-night relief for Executive Assistants and visiting delegations—boardroom logistics, five-star stays, and group hosting.',
-                  action: () => navigateTo('service-detail', { serviceId: 'personal-private-office' }),
-                },
-                {
-                  img: '/assets/aistudio/Main-5_c9bf5214.png',
-                  kicker: 'Five-Star Sanctuary',
-                  title: 'London Townhouses & Suites',
-                  caption: 'Quiet sanctuary suites across Mayfair, Knightsbridge, and the City inspected ahead of arrival so your key works effortlessly on step-in.',
-                  action: () => navigateTo('service-detail', { serviceId: 'residences-relocation' }),
-                },
-              ].map((card, i) => (
-                <motion.div
-                  key={card.title}
-                  initial={{ opacity: 0.9, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.01 }}
-                  transition={{ duration: 0.5, delay: i * 0.06 }}
-                  whileHover={{ y: -4 }}
-                  onClick={card.action}
-                  className="group relative cursor-pointer bg-[#12141A] border border-[#242630] hover:border-[#CFA85E]/70 transition-all overflow-hidden flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="aspect-[16/10] w-full overflow-hidden bg-black">
-                      <img
-                        src={card.img}
-                        alt={card.title}
-                        referrerPolicy="no-referrer"
-                        className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
-                      />
-                    </div>
-                    <div className="p-6 space-y-2">
-                      <span className="text-[11px] uppercase tracking-widest text-[#CFA85E] block">
-                        {card.kicker}
-                      </span>
-                      <h3 className="font-serif text-2xl text-[#F4F1EA] group-hover:text-[#DDB872] transition-colors">
-                        {card.title}
-                      </h3>
-                      <p className="text-xs text-[#9C968A] leading-relaxed font-light">{card.caption}</p>
-                    </div>
-                  </div>
-                  <div className="px-6 pb-5 pt-3 border-t border-[#1D1F28] text-xs text-[#CFA85E] flex items-center justify-between">
-                    <span>Inspect Practice</span>
-                    <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                  </div>
-                  <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#E2BA6B] scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
-                </motion.div>
-              ))}
-            </div>
-          </section>
+          <GoldDivider />
 
-          {/* Our Pillars — Five Distinct Core Service Pillars in a 2x3 Architectural Grid */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-6">
-            <motion.div
-              {...REVEAL_SECTION}
-              className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[#1D1F28] pb-4"
-            >
-              <div>
-                <span className="text-xs uppercase tracking-[0.22em] text-[#CFA85E] font-medium block mb-1">
-                  Five Core Service Mandates
-                </span>
-                <h2 className="font-serif text-3xl sm:text-4xl text-[#F4F1EA]">
-                  Our Pillars
-                </h2>
+          {/* Paired Editorial Photographs */}
+          <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            <motion.div {...REVEAL_SECTION} className="overflow-hidden border border-[#242630] bg-[#12141A] group">
+              <div className="aspect-[16/10] w-full overflow-hidden">
+                <SmartImage
+                  src="/assets/aistudio/hero_luxury_london_residence_1794298893032.jpg"
+                  alt="London townhouse interior in Mayfair"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
+                />
               </div>
-              <p className="text-xs sm:text-sm text-[#9C968A] max-w-md font-light leading-relaxed">
-                Five core practice pillars stewarded directly from 45 Albemarle Street—delivered with unconflicted terms from £100 engagements to sovereign itineraries.
-              </p>
+              <div className="p-6 space-y-2 border-t border-[#222530]">
+                <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B] block">Mayfair Base</span>
+                <h3 className="font-serif text-2xl text-[#FAF7F0]">
+                  <span className="card-title-underline">Personal support in London</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-[#C8C2B7] font-light leading-relaxed">
+                  You deal with real people at our Albemarle Street office, never an automated queue.
+                </p>
+              </div>
             </motion.div>
 
-            <AnimatePresence mode="wait">
-              {isPillarsLoading ? (
-                <motion.div
-                  key="consortium-pillars-skeleton"
-                  initial={{ opacity: 0.8 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <PillarGridSkeleton variant="consortium" count={6} />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="consortium-pillars-loaded"
-                  initial={{ opacity: 0.85 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.25 }}
-                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7"
-                >
-                  {[
-                    {
-                      num: 'I.',
-                      kicker: 'Pillar One · Hospitality',
-                      title: 'VIP Event & Box Access',
-                      icon: Ticket,
-                      body: 'Premier League derby boxes, Champions League finals, world-title fight nights, and major cultural festivals. We connect principals directly with authorised suite holders—handling seating, fine dining, and quiet matchday coordination without stress.',
-                      serviceId: 'experiences-culture',
-                    },
-                    {
-                      num: 'II.',
-                      kicker: 'Pillar Two · Accommodation',
-                      title: 'Suites & Private Estates',
-                      icon: Building2,
-                      body: 'London five-star hotel suites, discreet mews townhouses, and staffed countryside estates arranged on tailored terms. Every stay—whether an overnight boardroom trip or an extended family summer—is verified before your luggage crosses the threshold.',
-                      serviceId: 'residences-relocation',
-                    },
-                    {
-                      num: 'III.',
-                      kicker: 'Pillar Three · Chauffeurs',
-                      title: 'Chauffeur & Ground Fleet',
-                      icon: Car,
-                      body: 'Immaculate Rolls-Royce, Mercedes-Maybach, and Range Rover fleets driven by vetted defensive chauffeurs who know London’s mews lanes by heart. Seamless transfers between private aviation aprons, residences, and late evening tables.',
-                      serviceId: 'transport-security',
-                    },
-                    {
-                      num: 'IV.',
-                      kicker: 'Pillar Four · Aviation & Sea',
-                      title: 'Private Air & Sea Charter',
-                      icon: Plane,
-                      body: 'Direct Part 135 charter sourcing across RAF Northolt, Farnborough, and continental hubs alongside vetted yacht tenders—moving you effortlessly from boardroom meetings straight onto alpine valleys or Mediterranean moorings.',
-                      serviceId: 'travel-aviation',
-                    },
-                    {
-                      num: 'V.',
-                      kicker: 'Pillar Five · Private Sourcing',
-                      title: 'Bespoke Craft & Sourcing',
-                      icon: Gem,
-                      body: 'In-residence Savile Row basted fittings, independent watchmaker introductions, rare cellar bottles, and closed-door Bond Street previews—sourced directly through primary craftspeople with clear pass-through terms.',
-                      serviceId: 'luxury-sourcing',
-                    },
-                  ].map((pillar, i) => {
-                    const PillarIcon = pillar.icon;
-                    return (
-                      <motion.div
-                        key={pillar.num}
-                        initial={{ opacity: 0.9, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.48, delay: i * 0.06 }}
-                        whileHover={{ y: -4 }}
-                        onClick={() => navigateTo('service-detail', { serviceId: pillar.serviceId })}
-                        className="group relative cursor-pointer p-7 bg-[#12141A] border border-[#242630] hover:border-[#CFA85E]/80 transition-colors flex flex-col justify-between space-y-6 overflow-hidden"
-                      >
-                        <span
-                          aria-hidden="true"
-                          className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-[#E2BA6B] opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300 pointer-events-none"
-                        />
-                        <span
-                          aria-hidden="true"
-                          className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-[#E2BA6B] opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300 pointer-events-none"
-                        />
-
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-11 h-11 bg-[#090B10] border border-[#8B672B]/70 group-hover:border-[#E2BA6B] flex items-center justify-center text-[#E2BA6B] transition-colors shrink-0">
-                                <PillarIcon className="w-5 h-5" />
-                              </div>
-                              <div>
-                                <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#CFA85E] block">
-                                  {pillar.kicker}
-                                </span>
-                                <span className="font-serif italic text-xl text-[#E2BA6B] tabular-nums leading-none">
-                                  {pillar.num}
-                                </span>
-                              </div>
-                            </div>
-                            <ArrowUpRight className="w-4 h-4 text-[#8B672B] group-hover:text-[#E2BA6B] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
-                          </div>
-
-                          <div className="h-[3.5rem] sm:h-[3.75rem] flex items-center">
-                            <h3 className="font-serif text-xl sm:text-[1.32rem] xl:text-[1.45rem] text-[#FAF7F0] group-hover:text-[#E2BA6B] transition-colors leading-[1.25] line-clamp-2">
-                              {pillar.title}
-                            </h3>
-                          </div>
-
-                          <p className="text-xs sm:text-sm text-[#D4D8E2] leading-relaxed font-light">
-                            {pillar.body}
-                          </p>
-                        </div>
-
-                        <div className="pt-4 border-t border-[#1D202A] flex items-center justify-between text-xs text-[#E2BA6B]">
-                          <span>Inspect Practice</span>
-                          <span className="font-mono text-[11px] text-[#9C968A] group-hover:text-[#E2BA6B] transition-colors">
-                            Direct Desk
-                          </span>
-                        </div>
-
-                        <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#E2BA6B] scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
-                      </motion.div>
-                    );
-                  })}
-
-                  {/* 6th Grid Cell: Dedicated Albemarle Bespoke Mandate Panel (completes balanced 2x3 grid cleanly without mixing non-pillar ethos items) */}
-                  <motion.div
-                    initial={{ opacity: 0.9, y: 14 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.48, delay: 0.3 }}
-                    className="relative p-7 bg-[#090B10] border border-[#8B672B]/55 flex flex-col justify-between space-y-6"
-                  >
-                    <span aria-hidden="true" className="absolute top-0 left-0 w-2.5 h-2.5 border-t border-l border-[#E2BA6B]" />
-                    <span aria-hidden="true" className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b border-r border-[#E2BA6B]" />
-
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 bg-[#12141A] border border-[#8B672B]/60 flex items-center justify-center text-[#E2BA6B] shrink-0">
-                          <Compass className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-[#E2BA6B] block">
-                            Mayfair Private Office
-                          </span>
-                          <span className="font-serif italic text-xl text-[#E2BA6B] leading-none">
-                            Bespoke
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="h-[3.5rem] sm:h-[3.75rem] flex items-center">
-                        <h3 className="font-serif text-xl sm:text-[1.32rem] xl:text-[1.45rem] text-[#FAF7F0] leading-[1.25] line-clamp-2">
-                          Unlisted House Mandates
-                        </h3>
-                      </div>
-
-                      <p className="text-xs sm:text-sm text-[#C8C2B7] leading-relaxed font-light">
-                        Our directors coordinate custom residential scouting, dining introductions, and multi-generational family calendars directly from 45 Albemarle Street.
-                      </p>
-                    </div>
-
-                    <div className="pt-4 border-t border-[#1D202A] flex flex-col sm:flex-row lg:flex-col gap-2.5">
-                      <button
-                        type="button"
-                        onClick={() => openIntroductionModal('Bespoke Mandate Inquiry via Consortium Pillars')}
-                        className="btn-gold w-full py-2.5 px-4 text-xs flex items-center justify-center gap-1.5"
-                      >
-                        <span>Speak With a Principal</span>
-                        <ArrowUpRight className="w-3.5 h-3.5 text-[#08090C]" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => navigateTo('services')}
-                        className="btn-outline-gold w-full py-2.5 px-4 text-xs flex items-center justify-center gap-1.5"
-                      >
-                        <span>Explore Full Services Directory</span>
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <motion.div {...REVEAL_SECTION} className="overflow-hidden border border-[#242630] bg-[#12141A] group">
+              <div className="aspect-[16/10] w-full overflow-hidden">
+                <SmartImage
+                  src="/assets/aistudio/florence_palazzo_courtyard.jpg"
+                  alt="European courtyard architecture"
+                  sizes="(max-width: 1024px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
+                />
+              </div>
+              <div className="p-6 space-y-2 border-t border-[#222530]">
+                <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B] block">Around the World</span>
+                <h3 className="font-serif text-2xl text-[#FAF7F0]">
+                  <span className="card-title-underline">One team wherever you travel</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-[#C8C2B7] font-light leading-relaxed">
+                  We coordinate travel, stays and events across Europe and beyond from one point of contact.
+                </p>
+              </div>
+            </motion.div>
           </section>
 
-          {/* Governance Charter & Hard Operational Limits */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {[
-                { val: '12 : 1', label: 'Capped Household Ratio per Senior Director' },
-                { val: '0.0%', label: 'Supplier Commissions or Referral Mark-Ups' },
-                { val: 'English Law', label: 'Perpetual Non-Disclosure Covenants' },
-                { val: '24 / 7 / 365', label: 'Mayfair Duty Line & Crisis Despatch' },
-              ].map((stat) => (
-                <div key={stat.label} className="p-5 bg-[#0D1017] border border-[#242630] space-y-1.5">
-                  <span className="font-serif text-2xl sm:text-3xl text-[#E2BA6B] tabular-nums block">
-                    {stat.val}
-                  </span>
-                  <p className="text-xs text-[#D4D8E2] font-light leading-relaxed">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="bg-[#0D1017] border border-[#242630] p-6 sm:p-8 space-y-5">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-[#20232E] pb-4">
-                <div>
-                  <span className="tglc-kicker text-[11px] block mb-1">House Governance Charter</span>
-                  <h3 className="font-serif text-2xl sm:text-3xl text-[#FAF7F0]">
-                    Four Structural Distinctions of Albemarle Street Stewardship
-                  </h3>
-                </div>
-                <span className="text-xs font-mono text-[#E2BA6B]">Charter Schedule · Rev. 2026</span>
-              </div>
-
-              <div className="divide-y divide-[#1E212B]">
-                {[
-                  {
-                    clause: 'Clause I · Single-Account Continuity',
-                    obligation: 'No Ticket Numbers or Rotational Junior Handlers',
-                    standard:
-                      'Your nominated Lifestyle Director and named deputy hold complete authority across property, flight dispatch, cultural tables, and security—preserving context year after year.',
-                  },
-                  {
-                    clause: 'Clause II · Direct Ledger Transparency',
-                    obligation: '100% Pass-Through Cost Settlement',
-                    standard:
-                      'Every aircraft invoice, art auction hammer settlement, and estate staffing bill is presented alongside primary vendor vouchers for seamless family office audit.',
-                  },
-                  {
-                    clause: 'Clause III · Diplomatic & Sub-Rosa Range',
-                    obligation: 'Equally Fluent in St James’s and East London',
-                    standard:
-                      'Our directors navigate Savile Row houses, Royal Opera gala boxes, and late-night sound-system lofts in Dalston or Soho with identical composure.',
-                  },
-                  {
-                    clause: 'Clause IV · Sovereign Crisis Readiness',
-                    obligation: 'Direct Extraction, Medical & Aviation Mobilisation',
-                    standard:
-                      'Unscheduled medical repatriations, airspace diversions, and SIA close-protection details launch under standing pre-cleared mandates without bureaucratic delay.',
-                  },
-                ].map((row) => (
-                  <div key={row.clause} className="py-4 grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
-                    <span className="lg:col-span-3 font-mono text-xs text-[#E2BA6B]">{row.clause}</span>
-                    <span className="lg:col-span-4 font-serif text-lg text-[#FAF7F0]">{row.obligation}</span>
-                    <p className="lg:col-span-5 text-xs text-[#D4D8E2] font-light leading-relaxed">{row.standard}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          {/* Admissions CTA */}
+          {/* Introduction CTA */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8">
             <motion.div
               {...REVEAL_SECTION}
               className="p-8 sm:p-10 bg-[#12141A] border border-[#2A2D38] flex flex-col md:flex-row items-start md:items-center justify-between gap-8"
             >
               <div className="space-y-2">
-                <span className="text-xs uppercase tracking-widest text-[#CFA85E]">Admissions Inquiry</span>
+                <span className="text-xs uppercase tracking-widest text-[#CFA85E]">Membership</span>
                 <h3 className="font-serif text-2xl sm:text-3xl text-[#F4F1EA]">
-                  Explore Membership with TGLC
+                  Start with a private conversation
                 </h3>
                 <p className="text-xs sm:text-sm text-[#9C968A] max-w-2xl font-light leading-relaxed">
-                  Our Membership Committee meets weekly at 3rd Floor, 45 Albemarle Street, Mayfair to consider private introductions by referral or direct inquiry. Conversations unfold in person over tea or by encrypted call, with transparent terms tailored to your household’s rhythm.
+                  Membership is by introduction. Tell us how we can help, and we will arrange a time to talk.
                 </p>
               </div>
               <button
-                onClick={() => openIntroductionModal('Consortium Overview Inquiry')}
+                onClick={() => openIntroductionModal('Consortium Overview')}
                 className="btn-gold px-7 py-3.5 text-xs whitespace-nowrap shrink-0"
               >
-                Request an Introduction
+                Request an introduction
               </button>
             </motion.div>
           </section>
@@ -718,73 +448,71 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
       )}
 
       {/* ========================================================= */}
-      {/* 2. About TGLC & Leadership Subpage */}
+      {/* 1B. Dedicated 24/7 Bespoke Concierge Subpage */}
+      {/* ========================================================= */}
+      {subPage === 'concierge' && <ConsortiumConciergeSection variant="full" />}
+
+      {/* ========================================================= */}
+      {/* 2. About TGLC Subpage */}
       {/* ========================================================= */}
       {subPage === 'about' && (
         <div className="space-y-10 sm:space-y-12">
-          {/* Cinematic Hero */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8">
-            <div className="relative min-h-[400px] sm:min-h-[460px] flex items-end overflow-hidden border border-[#242630] bg-[#12141A]">
-              <motion.img
-                {...HERO_KEN_BURNS}
-                src="/assets/aistudio/consortium_approach_board.jpg"
-                alt="TGLC Senior Director Advisory Boardroom overlooking London"
-                referrerPolicy="no-referrer"
-                className="absolute inset-0 w-full h-full object-cover brightness-105 contrast-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#07080B] via-[#07080B]/45 to-[#07080B]/20" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#07080B]/90 via-[#07080B]/45 to-transparent hidden sm:block" />
-
+          {/* Cinematic 5-Slide Hero Carousel */}
+          <div className="max-w-7xl mx-auto px-5 sm:px-8">
+            <EditorialHeroCarousel
+              slides={CONSORTIUM_SUBPAGE_SLIDES.about}
+              className="min-h-[400px] sm:min-h-[460px] flex items-end border border-[#242630]"
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              scrimVariant="bottom-left"
+              controlsPosition="bottom-right"
+            >
               <motion.div
                 initial={{ opacity: 0.01, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65 }}
-                className="relative z-10 p-6 sm:p-10 max-w-4xl space-y-3.5"
+                className="relative z-10 p-6 sm:p-10 pb-16 sm:pb-12 max-w-4xl space-y-3.5"
               >
                 <span className="tglc-kicker text-[11px] block tabular-nums">
-                  Leadership & Heritage · 3rd Floor, 45 Albemarle Street
+                  Mayfair, London · 45 Albemarle Street
                 </span>
                 <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#FAF7F0] leading-[1.06] text-balance">
-                  About The Global Luxury Consortium
+                  About TGLC
                 </h1>
                 <p className="font-serif italic text-lg sm:text-2xl text-[#E2BA6B] leading-relaxed">
-                  “A life arranged with precision, warmth, and unhurried grace.”
+                  “Opening doors that don’t usually exist.”
                 </p>
                 <p className="tglc-prose text-sm max-w-2xl">
-                  Founded by Mickell Washington and stewarded alongside Leance Djedje and Melize Nastaasia to bring unhurried warmth, British poise, and transparent human accountability to personal and corporate concierge work.
+                  We help individuals, families and busy professionals with travel, dining, events, homes and hard-to-find requests.
                 </p>
               </motion.div>
-            </div>
-          </section>
+            </EditorialHeroCarousel>
+          </div>
 
-          {/* House Story (Removed Sticking Logo, Enriched Editorial Text) + Two Large Photographs */}
+          {/* Story + Two Photographs */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-8">
             <motion.div {...REVEAL_SECTION} className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
               <div className="lg:col-span-5 space-y-4 text-sm sm:text-base text-[#C8C2B7] leading-relaxed font-light">
                 <span className="text-xs uppercase tracking-[0.22em] text-[#CFA85E] font-medium block">
-                  Origin & Heritage
+                  Why We Started
                 </span>
                 <h2 className="font-serif text-3xl text-[#F4F1EA]">
-                  Built as an antidote to transactional concierge brokerage.
+                  Built around care, not volume.
                 </h2>
                 <p>
-                  The Global Luxury Consortium was established by Mickell Washington alongside a circle of family office strategists, art historians, and private aviation directors who shared a quiet frustration: modern concierge work had grown noisy, commission-driven, and increasingly indifferent to taste.
+                  TGLC was founded on a simple idea: luxury is about how you’re looked after, not how much you spend.
                 </p>
                 <p>
-                  Anchored at TGLC House on historic Albemarle Street in Mayfair—moments from the Royal Academy, Old Bond Street galleries, and Berkeley Square—our third-floor office acts as a discreet extension of your household rather than an outside supplier.
-                </p>
-                <p>
-                  Because we turn away high-volume retainers, every conversation happens person-to-person with principals who remember your estate preferences, your family’s travelling rhythm, and the subtler points of life in London.
+                  We work from our third-floor office on Albemarle Street in Mayfair. Every request is handled by real people who take the time to know you.
                 </p>
 
                 <div className="pt-2 border-t border-[#1E202B] grid grid-cols-2 gap-4 text-xs">
                   <div className="p-3 bg-[#12141A] border border-[#242630]">
-                    <span className="font-serif text-2xl text-[#CFA85E] tabular-nums block">24/7</span>
-                    <span className="text-[#9C968A]">Senior Duty Coverage</span>
+                    <span className="font-serif text-xl text-[#CFA85E] tabular-nums block">Mon – Fri</span>
+                    <span className="text-[#9C968A]">08:30 – 19:30</span>
                   </div>
                   <div className="p-3 bg-[#12141A] border border-[#242630]">
-                    <span className="font-serif text-2xl text-[#CFA85E] block">Zero Mark-Ups</span>
-                    <span className="text-[#9C968A]">Unconflicted Counsel</span>
+                    <span className="font-serif text-xl text-[#CFA85E] block">Mayfair</span>
+                    <span className="text-[#9C968A]">45 Albemarle Street</span>
                   </div>
                 </div>
               </div>
@@ -792,33 +520,33 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
               <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="overflow-hidden border border-[#242630] bg-[#12141A] group">
                   <div className="aspect-[4/3] overflow-hidden">
-                    <img
+                    <SmartImage
                       src="/assets/aistudio/tglc_st_james_salon.jpg"
-                      alt="Members consultation drawing room at TGLC House"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                      alt="Meeting room in Mayfair"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 30vw"
+                      className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                     />
                   </div>
                   <div className="p-5 border-t border-[#222530]">
-                    <span className="text-[11px] text-[#CFA85E] block uppercase tracking-wider">Mayfair Advisory Chamber</span>
+                    <span className="text-[11px] text-[#CFA85E] block uppercase tracking-wider">Mayfair Office</span>
                     <p className="text-xs text-[#9C968A] mt-1 font-light leading-relaxed">
-                      Where family itineraries, UK educational placements, and private relocations are reviewed quietly over afternoon tea.
+                      A quiet place to sit down, talk through your plans and get to know us.
                     </p>
                   </div>
                 </div>
                 <div className="overflow-hidden border border-[#242630] bg-[#12141A] group">
                   <div className="aspect-[4/3] overflow-hidden">
-                    <img
+                    <SmartImage
                       src="/assets/aistudio/savile_row_bespoke.jpg"
-                      alt="Traditional London tailoring craft and bespoke attention"
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                      alt="London tailoring craftsmanship"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 30vw"
+                      className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                     />
                   </div>
                   <div className="p-5 border-t border-[#222530]">
-                    <span className="text-[11px] text-[#CFA85E] block uppercase tracking-wider">Bespoke by Measurement</span>
+                    <span className="text-[11px] text-[#CFA85E] block uppercase tracking-wider">Personal Approach</span>
                     <p className="text-xs text-[#9C968A] mt-1 font-light leading-relaxed">
-                      Just like our neighbours on Savile Row, no two member dossiers ever borrow the same template or routine.
+                      No two people live the same way, so we shape our work around your routine.
                     </p>
                   </div>
                 </div>
@@ -828,19 +556,19 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
 
           <GoldDivider />
 
-          {/* Executive Stewards of TGLC House */}
+          {/* Team Section */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-8">
             <motion.div {...REVEAL_SECTION} className="border-b border-[#222530] pb-5 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
                 <span className="text-xs uppercase tracking-[0.2em] text-[#CFA85E] font-medium block mb-1.5">
-                  Executive Leadership & Stewardship
+                  Our Team
                 </span>
                 <h2 className="font-serif text-3xl sm:text-4xl text-[#F4F1EA]">
-                  The Stewards of TGLC House
+                  The people looking after you
                 </h2>
               </div>
               <p className="text-xs text-[#9C968A] max-w-md font-light">
-                Opening doors that don’t usually exist. Relationship-led leadership guided by discretion by default, British poise, and unwavering personal attention.
+                You speak directly with the people who plan and coordinate your requests.
               </p>
             </motion.div>
 
@@ -862,11 +590,11 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                   <div>
                     {member.image ? (
                       <div className="aspect-[3/4] w-full overflow-hidden mb-6 bg-[#181A22] border border-[#2A2D38] relative">
-                        <img
+                        <SmartImage
                           src={member.image}
                           alt={member.name}
-                          referrerPolicy="no-referrer"
-                          className="w-full h-full object-cover object-top brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                          sizes="(max-width: 1024px) 100vw, 33vw"
+                          className="w-full h-full object-cover object-top brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D14]/80 via-transparent to-transparent pointer-events-none" />
                         <span className="absolute bottom-3 left-3 px-2 py-0.5 bg-[#0A0D14]/90 border border-[#E2BA6B]/40 font-mono text-[9px] uppercase tracking-widest text-[#E2BA6B]">
@@ -883,25 +611,12 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                         <span className="font-serif text-lg text-[#FAF7F0] font-light">
                           {member.title}
                         </span>
-                        <div className="mt-2.5 inline-flex items-center gap-2 px-3 py-1 bg-[#10141D] border border-[#273042]">
-                          <span className="w-1.5 h-1.5 rotate-45 bg-[#E2BA6B]" />
-                          <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-[#CFA85E]">
-                            {member.origin}
-                          </span>
-                        </div>
                       </div>
                     )}
 
-                    <div className="flex items-baseline justify-between gap-2 mb-1">
-                      <span className="text-[11px] tracking-wider text-[#E2BA6B] font-medium font-mono">
-                        {member.title}
-                      </span>
-                      {member.origin && (
-                        <span className="text-[10px] font-mono text-[#8F98AA]">
-                          {member.origin}
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-[11px] tracking-wider text-[#E2BA6B] font-medium font-mono block mb-1">
+                      {member.title}
+                    </span>
 
                     <h3 className="font-serif text-2xl text-[#FAF7F0] mb-1 group-hover:text-[#E2BA6B] transition-colors">
                       {member.name}
@@ -912,7 +627,7 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
 
                   <div className="pt-3 border-t border-[#20232E] text-xs text-[#FAF7F0] space-y-1">
                     <span className="text-[#E2BA6B] block text-[10px] uppercase tracking-wider font-mono">
-                      Core Discipline & Desks
+                      Focus
                     </span>
                     <p className="text-[#A2ACBD] font-light text-[11px] leading-relaxed">
                       {member.specialism}
@@ -923,82 +638,40 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
             </div>
           </section>
 
-          {/* House Milestones & Institutional Heritage */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-6">
-            <div className="border-b border-[#222530] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div>
-                <span className="tglc-kicker text-xs block mb-1">Chronicle of the House</span>
-                <h2 className="font-serif text-3xl text-[#FAF7F0]">Milestones Across Two Decades of Quiet Practice</h2>
-              </div>
-              <span className="text-xs font-mono text-[#E2BA6B]">London W1S · Geneva · Florence</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {[
-                {
-                  year: 'Founding Year',
-                  heading: 'Established as an Anti-Commission Practice',
-                  note: 'Mickell Washington inaugurates the first Mayfair advisory ledger to serve Sovereign and Principal households purely on retained neutrality.',
-                },
-                {
-                  year: '2019 · Aviation Desk',
-                  heading: 'Direct FBO Tarmac Protocols Secured',
-                  note: 'Permanent ramp clearance agreements executed with Farnborough, RAF Northolt, and Geneva Cointrin ground commanders.',
-                },
-                {
-                  year: '2022 · Albemarle St',
-                  heading: 'Acquisition of 3rd Floor Drawing Rooms',
-                  note: 'TGLC House opens at 45 Albemarle Street with acoustically shielded briefing salons, horology vault inspection lighting, and archive library.',
-                },
-                {
-                  year: '2025 · Sub-Rosa Arm',
-                  heading: 'Late-Hours & Urban Culture Desk Formalised',
-                  note: 'Expanded patronage covering closed-door East London sound-system spaces, unadvertised Soho rooms, and rapid street-couture sourcing.',
-                },
-              ].map((m) => (
-                <div key={m.year} className="p-6 bg-[#0D1017] border border-[#242630] space-y-2.5">
-                  <span className="font-mono text-xs uppercase tracking-widest text-[#E2BA6B] block">{m.year}</span>
-                  <h4 className="font-serif text-xl text-[#FAF7F0] leading-snug">{m.heading}</h4>
-                  <p className="text-xs text-[#D4D8E2] leading-relaxed font-light">{m.note}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Additional Visual Diptych: Albemarle Street & Collector Craft */}
+          {/* Visual Diptych */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             <motion.div {...REVEAL_SECTION} className="bg-[#12141A] border border-[#242630] overflow-hidden group">
               <div className="aspect-[16/10] overflow-hidden">
-                <img
+                <SmartImage
                   src="/assets/aistudio/U2xzhqR8NqpZGDRNVta6Gk_fe26a8c6.jpg"
-                  alt="Private Mayfair clubs and cultural institutions"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                  alt="Mayfair hospitality and dining"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                 />
               </div>
               <div className="p-6 space-y-2">
-                <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">Personal Representation</span>
-                <h3 className="font-serif text-2xl text-[#F4F1EA]">Stepping Through W1S Doors</h3>
+                <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">Relationships</span>
+                <h3 className="font-serif text-2xl text-[#F4F1EA]">Built on personal trust</h3>
                 <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                  Membership introductions are backed by the personal standing of our founders across London’s traditional clubs, art foundations, and private educational trusts.
+                  We work directly with people we know across London and abroad so your plans run smoothly.
                 </p>
               </div>
             </motion.div>
 
             <motion.div {...REVEAL_SECTION} className="bg-[#12141A] border border-[#242630] overflow-hidden group">
               <div className="aspect-[16/10] overflow-hidden">
-                <img
+                <SmartImage
                   src="/assets/aistudio/About-Luxury-Watches_77cb4520.jpg"
-                  alt="Independent horology verification and collector stewardship"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                  alt="Fine watches and sourcing"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                 />
               </div>
               <div className="p-6 space-y-2">
-                <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">Specialist Custody</span>
-                <h3 className="font-serif text-2xl text-[#F4F1EA]">Independent Horology & Art Counsel</h3>
+                <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">Clear Advice</span>
+                <h3 className="font-serif text-2xl text-[#F4F1EA]">Always on your side</h3>
                 <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                  Whether authenticating an estate movement or commissioning a private dining cellar, we sit permanently on the member’s side of the table—never accepting dealer rebates.
+                  We give honest recommendations and agree every cost with you before anything is booked.
                 </p>
               </div>
             </motion.div>
@@ -1011,212 +684,139 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
       {/* ========================================================= */}
       {subPage === 'ethos' && (
         <div className="space-y-10 sm:space-y-12">
-          <section className="max-w-7xl mx-auto px-5 sm:px-8">
-            <div className="relative min-h-[390px] sm:min-h-[450px] flex items-end overflow-hidden border border-[#242630] bg-[#12141A]">
-              <motion.img
-                {...HERO_KEN_BURNS}
-                src="/assets/aistudio/consortium_ethos_sanctuary.jpg"
-                alt="Historic St James's private library sanctuary and founding principles"
-                referrerPolicy="no-referrer"
-                className="absolute inset-0 w-full h-full object-cover brightness-105 contrast-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#07080B] via-[#07080B]/45 to-[#07080B]/20" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#07080B]/90 via-[#07080B]/45 to-transparent hidden sm:block" />
-
+          <div className="max-w-7xl mx-auto px-5 sm:px-8">
+            <EditorialHeroCarousel
+              slides={CONSORTIUM_SUBPAGE_SLIDES.ethos}
+              className="min-h-[390px] sm:min-h-[450px] flex items-end border border-[#242630]"
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              scrimVariant="bottom-left"
+              controlsPosition="bottom-right"
+            >
               <motion.div
                 initial={{ opacity: 0.01, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65 }}
-                className="relative z-10 p-6 sm:p-10 max-w-4xl space-y-3.5"
+                className="relative z-10 p-6 sm:p-10 pb-16 sm:pb-12 max-w-4xl space-y-3.5"
               >
                 <span className="tglc-kicker text-[11px] block">
-                  Founding Creed & Fiduciary Standard
+                  What Guides Us
                 </span>
                 <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#FAF7F0] leading-[1.06] text-balance">
-                  Our Ethos & Five Immutable Principles
+                  Our Ethos
                 </h1>
                 <p className="font-serif italic text-lg sm:text-2xl text-[#E2BA6B] leading-relaxed">
-                  “A rare breadth of access, guided always by quiet conviction.”
+                  “Simple standards that guide everything we do.”
                 </p>
                 <p className="tglc-prose text-sm max-w-2xl">
-                  Everything we agree to undertake is governed by five unchanging convictions written before our first client joined—prioritising impartiality, taste, and absolute protection of household privacy.
+                  We put your interests first. We keep things private, clear and personal.
                 </p>
               </motion.div>
-            </div>
-          </section>
+            </EditorialHeroCarousel>
+          </div>
 
-          {/* Editorial Essay + Two Large Spreads */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-8">
-            <motion.div {...REVEAL_SECTION} className="max-w-3xl space-y-3">
-              <span className="tglc-kicker text-xs block">
-                Why Brokerage Fails Families
-              </span>
-              <h2 className="font-serif text-3xl sm:text-4xl text-[#FAF7F0]">
-                Replacing Commercial Incentives with Quiet Stewardship
-              </h2>
-              <p className="tglc-prose text-sm">
-                Traditional concierge services frequently disguise middleman commissions behind membership dues, nudging principals toward venues and charter operators that pay the highest referral fees. TGLC rejects affiliate incentives in their entirety. Every invoice passes through cleanly at direct provider cost, freeing your director to recommend an eight-seat East London omakase cellar or a Grand Hotel suite based purely on merit.
-              </p>
+          {/* Two Editorial Plates */}
+          <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
+              <div className="aspect-[16/10] overflow-hidden">
+                <SmartImage
+                  src="/assets/aistudio/bond_street_jewellery.jpg"
+                  alt="Fine jewellery on Bond Street"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
+                />
+              </div>
+              <div className="p-6 space-y-2">
+                <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Honest Guidance</span>
+                <h3 className="font-serif text-2xl text-[#FAF7F0]">Advice you can trust</h3>
+                <p className="text-xs sm:text-sm tglc-prose">
+                  We recommend places and makers because they are right for you, with clear terms agreed upfront.
+                </p>
+              </div>
             </motion.div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-              <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
-                <div className="aspect-[16/10] overflow-hidden">
-                  <img
-                    src="/assets/aistudio/bond_street_jewellery.jpg"
-                    alt="High jewellery provenance and ethical independence on Bond Street"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-                <div className="p-6 space-y-2">
-                  <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Zero Commission Conflicts</span>
-                  <h3 className="font-serif text-2xl text-[#FAF7F0]">Impartial Advice in Every Acquisition</h3>
-                  <p className="text-xs sm:text-sm tglc-prose">
-                    When guiding a household toward a timepiece, rare vintage cellar lot, or Mayfair pied-à-terre, our counsel stays completely independent from seller commissions.
-                  </p>
-                </div>
-              </motion.div>
-
-              <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
-                <div className="aspect-[16/10] overflow-hidden">
-                  <img
-                    src="/assets/aistudio/highland_stone_estate_1794391698042.jpg"
-                    alt="Historic Scottish and English country estate reserved privately for TGLC families"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-                <div className="p-6 space-y-2">
-                  <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Stewardship Across Generations</span>
-                  <h3 className="font-serif text-2xl text-[#FAF7F0]">Long-Horizon Family Relationships</h3>
-                  <p className="text-xs sm:text-sm tglc-prose">
-                    Households often join us during a move to London and stay across decades—spanning school placements, Highland & Oxfordshire summer estates, and multi-generational family milestones.
-                  </p>
-                </div>
-              </motion.div>
-            </div>
+            <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
+              <div className="aspect-[16/10] overflow-hidden">
+                <SmartImage
+                  src="/assets/aistudio/highland_stone_estate_1794391698042.jpg"
+                  alt="Country house in the British countryside"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
+                />
+              </div>
+              <div className="p-6 space-y-2">
+                <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Long-Term Care</span>
+                <h3 className="font-serif text-2xl text-[#FAF7F0]">Relationships that last</h3>
+                <p className="text-xs sm:text-sm tglc-prose">
+                  We learn how you like to travel, dine and host so every plan feels natural over time.
+                </p>
+              </div>
+            </motion.div>
           </section>
 
           {/* The Five Ethos Principles */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-5">
-            {ETHOS_PRINCIPLES.map((principle, idx) => (
-              <motion.div
-                key={principle.number}
-                initial={{ opacity: 0.9, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.01 }}
-                transition={{ duration: 0.5, delay: idx * 0.05 }}
-                whileHover={{ x: 3 }}
-                className="p-6 sm:p-8 bg-[#12141A] border border-[#242630] hover:border-[#8B672B] transition-colors grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
-              >
-                <div className="lg:col-span-4 space-y-1.5">
-                  <span className="font-serif italic text-3xl sm:text-4xl text-[#CFA85E] tabular-nums block">
-                    {principle.number}
-                  </span>
-                  <h3 className="font-serif text-2xl text-[#F4F1EA] leading-snug">
-                    {principle.title}
-                  </h3>
-                </div>
+          <section className="max-w-7xl mx-auto px-5 sm:px-8">
+            <Reveal stagger className="space-y-5">
+              {ETHOS_PRINCIPLES.map((principle) => (
+                <RevealItem
+                  key={principle.number}
+                  className="p-6 sm:p-8 bg-[#12141A] border border-[#242630] hover:border-[#8B672B] transition-colors grid grid-cols-1 lg:grid-cols-12 gap-6 items-center"
+                >
+                  <div className="lg:col-span-5 space-y-1.5">
+                    <span className="font-serif italic text-3xl sm:text-4xl text-[#CFA85E] tabular-nums block">
+                      {principle.number}
+                    </span>
+                    <h3 className="font-serif text-2xl text-[#F4F1EA] leading-snug">
+                      {principle.title}
+                    </h3>
+                  </div>
 
-                <div className="lg:col-span-8 space-y-2.5">
-                  <p className="font-serif text-lg sm:text-xl text-[#D9D4CA] leading-relaxed">
-                    {principle.summary}
-                  </p>
-                  <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                    {principle.body}
-                  </p>
-                </div>
-              </motion.div>
-            ))}
+                  <div className="lg:col-span-7">
+                    <p className="font-serif text-lg sm:text-xl text-[#D9D4CA] leading-relaxed">
+                      {principle.summary}
+                    </p>
+                  </div>
+                </RevealItem>
+              ))}
+            </Reveal>
           </section>
 
           {/* Ethos in Action Diptych */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             <motion.div {...REVEAL_SECTION} className="bg-[#12141A] border border-[#242630] overflow-hidden group">
               <div className="aspect-[16/10] overflow-hidden">
-                <img
+                <SmartImage
                   src="/assets/aistudio/royal_opera_gallery.jpg"
-                  alt="Covent Garden patronage and cultural access"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                  alt="Covent Garden theatre architecture"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                 />
               </div>
               <div className="p-6 space-y-1.5">
-                <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">Cultural Patronage</span>
-                <h3 className="font-serif text-2xl text-[#FAF7F0]">Preserving Institutions Through Discretion</h3>
+                <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">Culture & Events</span>
+                <h3 className="font-serif text-2xl text-[#FAF7F0]">Respect for every venue</h3>
                 <p className="text-xs tglc-prose">
-                  Private boxes and after-hours gallery views are extended because our patrons respect every institution’s quiet dignity.
+                  We build lasting relationships with hosts and venues through good manners and discretion.
                 </p>
               </div>
             </motion.div>
-              <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
+
+            <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
               <div className="aspect-[16/10] overflow-hidden">
-                <img
+                <SmartImage
                   src="/assets/aistudio/6a194620490b49214619b628_file_8wpx83o3_8d7f9f53.png"
-                  alt="Private aviation cabin preparation"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                  alt="Private aircraft cabin"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                 />
               </div>
               <div className="p-6 space-y-1.5">
-                <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">Invisible Preparation</span>
-                <h3 className="font-serif text-2xl text-[#FAF7F0]">Fifty Small Choices Decided Ahead of Time</h3>
+                <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">Quiet Preparation</span>
+                <h3 className="font-serif text-2xl text-[#FAF7F0]">Details handled ahead of time</h3>
                 <p className="text-xs text-[#D4D8E2] tglc-prose">
-                  Cabin temperature, nursery transfers, and preferred Mayfair morning newspapers are readied before you ask.
+                  We check the small details before you arrive so your day runs calmly.
                 </p>
               </div>
             </motion.div>
-          </section>
-
-          {/* Four-Gate Partner Vetting Standard */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-6">
-            <div className="border-b border-[#222530] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-              <div>
-                <span className="tglc-kicker text-xs block mb-1">Procurement Discipline</span>
-                <h2 className="font-serif text-3xl text-[#FAF7F0]">Four-Gate Partner Vetting & Conflict-Free Audit</h2>
-              </div>
-              <span className="text-xs font-mono text-[#E2BA6B]">Annual Compliance Verification</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-              {[
-                {
-                  gate: 'Gate 01',
-                  title: 'Operator & Solvency Audit',
-                  body: 'Every aviation AOC holder, marine captain, and specialist courier clears annual hull insurance, maintenance log, and balance-sheet diligence.',
-                },
-                {
-                  gate: 'Gate 02',
-                  title: 'Unannounced Field Inspection',
-                  body: 'Our principals personally test lighting, acoustics, security exits, and kitchen standards before recommending any new London or European dining room.',
-                },
-                {
-                  gate: 'Gate 03',
-                  title: 'Zero Commission Covenant',
-                  body: 'Suppliers sign explicit non-rebate declarations; any discretionary trade discount achieved is credited directly onto the household ledger.',
-                },
-                {
-                  gate: 'Gate 04',
-                  title: 'Perpetual NDA Execution',
-                  body: 'No subcontractor receives surname details or photographic permission without express written sign-off from the household Principal.',
-                },
-              ].map((g, idx) => (
-                <motion.div
-                  key={g.gate}
-                  initial={{ opacity: 0.9, y: 12 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.01 }}
-                  transition={{ duration: 0.45, delay: idx * 0.06 }}
-                  whileHover={{ y: -3 }}
-                  className="p-6 bg-[#0D1017] border border-[#242630] hover:border-[#CFA85E]/70 transition-colors space-y-2.5 relative overflow-hidden group"
-                >
-                  <span className="font-mono text-xs text-[#E2BA6B] uppercase tracking-widest block">{g.gate}</span>
-                  <h4 className="font-serif text-xl text-[#FAF7F0] leading-snug group-hover:text-[#E2BA6B] transition-colors">{g.title}</h4>
-                  <p className="text-xs text-[#D4D8E2] leading-relaxed font-light">{g.body}</p>
-                  <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#E2BA6B] scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
-                </motion.div>
-              ))}
-            </div>
           </section>
         </div>
       )}
@@ -1226,258 +826,178 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
       {/* ========================================================= */}
       {subPage === 'approach' && (
         <div className="space-y-10 sm:space-y-12">
-          <section className="max-w-7xl mx-auto px-5 sm:px-8">
-            <div className="relative min-h-[390px] sm:min-h-[450px] flex items-end overflow-hidden border border-[#242630] bg-[#0D1017]">
-              <motion.img
-                {...HERO_KEN_BURNS}
-                src="/assets/aistudio/U2xzhqR8NqpZGDRNVta6Gk_fe26a8c6.jpg"
-                alt="Curated lifestyle governance and multi-generational family management"
-                referrerPolicy="no-referrer"
-                className="absolute inset-0 w-full h-full object-cover brightness-105 contrast-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#07080B] via-[#07080B]/45 to-[#07080B]/20" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#07080B]/90 via-[#07080B]/45 to-transparent hidden sm:block" />
-
+          <div className="max-w-7xl mx-auto px-5 sm:px-8">
+            <EditorialHeroCarousel
+              slides={CONSORTIUM_SUBPAGE_SLIDES.approach}
+              className="min-h-[390px] sm:min-h-[450px] flex items-end border border-[#242630]"
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              scrimVariant="bottom-left"
+              controlsPosition="bottom-right"
+            >
               <motion.div
                 initial={{ opacity: 0.01, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65 }}
-                className="relative z-10 p-6 sm:p-10 max-w-4xl space-y-3.5"
+                className="relative z-10 p-6 sm:p-10 pb-16 sm:pb-12 max-w-4xl space-y-3.5"
               >
                 <span className="tglc-kicker text-[11px] block">
-                  Methodology & Onboarding Journey
+                  How We Work
                 </span>
                 <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#FAF7F0] leading-[1.06] text-balance">
-                  Our Approach to Bespoke Management
+                  Our Approach
                 </h1>
                 <p className="font-serif italic text-lg sm:text-2xl text-[#E2BA6B] leading-relaxed">
-                  From quiet introduction over tea on Albemarle Street to seamless execution across time zones.
+                  “Clear, personal and calm from the first call.”
                 </p>
                 <p className="tglc-prose text-sm max-w-2xl">
-                  We begin by listening—learning your household patterns, tastes, and security boundaries so future requests resolve effortlessly with minimal back-and-forth.
+                  We start by listening. Once we know what matters to you, we handle the details quietly.
                 </p>
               </motion.div>
-            </div>
-          </section>
+            </EditorialHeroCarousel>
+          </div>
 
-          {/* Two Visual Chapters */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-            <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
-              <div className="aspect-[16/10] overflow-hidden">
-                <img
-                  src="/assets/aistudio/mayfair_fine_dining.jpg"
-                  alt="Candlelit Mayfair dining table arranged discreetly for a member"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-              <div className="p-6 space-y-2">
-                <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Warmth Before Efficiency</span>
-                <h3 className="font-serif text-2xl text-[#FAF7F0]">Listening First, Solving Effortlessly</h3>
-                <p className="text-xs sm:text-sm tglc-prose">
-                  We begin with an unhurried private conversation—never a rigid intake survey—so we grasp your household rhythm, humour, and unspoken standards from day one.
-                </p>
-              </div>
-            </motion.div>
-
-            <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
-              <div className="aspect-[16/10] overflow-hidden">
-                <img
-                  src="/assets/aistudio/698157105b08bd0b828e954b_file_k95qb05z_c7bc7f74.png"
-                  alt="Farnborough private aviation hangar and diplomatic ground coordination"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-              <div className="p-6 space-y-2">
-                <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">24/7 Duty Readiness</span>
-                <h3 className="font-serif text-2xl text-[#F4F1EA]">Synchronised Wing-to-Door Transitions</h3>
-                <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                  Our aviation desk communicates directly with residence housekeepers and chauffeurs in real time, ensuring nursery rooms, supper tables, and keys await on touchdown.
-                </p>
-              </div>
-            </motion.div>
-          </section>
-
-          {/* 5 Step Onboarding Track */}
+          {/* 4-Step Track */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-8">
             <div className="border-b border-[#222530] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
                 <span className="text-xs uppercase tracking-[0.22em] text-[#CFA85E] font-medium block mb-1">
-                  Onboarding Architecture
+                  Step by Step
                 </span>
-                <h2 className="font-serif text-3xl text-[#F4F1EA]">Five Considered Stages of Induction</h2>
+                <h2 className="font-serif text-3xl text-[#F4F1EA]">How membership works</h2>
               </div>
               <p className="text-xs text-[#9C968A] max-w-md font-light">
-                Once introduced, most families complete induction quietly within two weeks while immediate requests activate on day one.
+                A straightforward four-step process built around one dedicated point of contact.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
-              {APPROACH_STEPS.map((item, idx) => (
-                <motion.div
+            <Reveal stagger className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+              {APPROACH_STEPS.map((item) => (
+                <RevealItem
                   key={item.step}
-                  initial={{ opacity: 0.9, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.01 }}
-                  transition={{ duration: 0.45, delay: idx * 0.06 }}
-                  whileHover={{ y: -3 }}
-                  className={`p-6 bg-[#12141A] border border-[#242630] hover:border-[#CFA85E]/80 transition-colors flex flex-col justify-between relative overflow-hidden group ${
-                    idx === 4 ? 'md:col-span-2 lg:col-span-1' : ''
-                  }`}
+                  className="p-6 bg-[#12141A] border border-[#242630] hover:border-[#CFA85E]/80 transition-colors flex flex-col justify-between relative overflow-hidden group"
                 >
                   <div>
                     <span className="font-serif italic text-3xl text-[#CFA85E] tabular-nums block mb-2.5">
                       {item.step}
                     </span>
                     <h3 className="font-serif text-xl text-[#F4F1EA] mb-2.5 leading-snug group-hover:text-[#E2BA6B] transition-colors">
-                      {item.title}
+                      <span className="card-title-underline">{item.title}</span>
                     </h3>
                     <p className="text-xs text-[#9C968A] leading-relaxed font-light">{item.description}</p>
                   </div>
                   <div className="mt-6 pt-3 border-t border-[#20232E] text-[10px] text-[#CFA85E] uppercase tracking-widest">
-                    Stage {item.step}
+                    Step {item.step}
                   </div>
                   <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#E2BA6B] scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
-                </motion.div>
+                </RevealItem>
               ))}
+            </Reveal>
+
+            {/* Two Visual Chapters */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+              <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
+                <div className="aspect-[16/10] overflow-hidden">
+                  <SmartImage
+                    src="/assets/aistudio/mayfair_fine_dining.jpg"
+                    alt="Mayfair dining room"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
+                  />
+                </div>
+                <div className="p-6 space-y-2">
+                  <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Personal First</span>
+                  <h3 className="font-serif text-2xl text-[#FAF7F0]">A real conversation first</h3>
+                  <p className="text-xs sm:text-sm tglc-prose">
+                    We start by talking through your plans so we understand your taste and what matters most.
+                  </p>
+                </div>
+              </motion.div>
+
+              <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
+                <div className="aspect-[16/10] overflow-hidden">
+                  <SmartImage
+                    src="/assets/aistudio/698157105b08bd0b828e954b_file_k95qb05z_c7bc7f74.png"
+                    alt="Private aircraft travel"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
+                  />
+                </div>
+                <div className="p-6 space-y-2">
+                  <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">Joined-Up Planning</span>
+                  <h3 className="font-serif text-2xl text-[#F4F1EA]">Travel, stays and cars aligned</h3>
+                  <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
+                    We line up flights, transfers and check-in together so every stage connects cleanly.
+                  </p>
+                </div>
+              </motion.div>
             </div>
 
-            {/* Additional Operational Imagery Row */}
+            {/* Second Visual Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
               <div className="bg-[#12141A] border border-[#242630] overflow-hidden group">
                 <div className="aspect-[16/10] overflow-hidden">
-                  <img
+                  <SmartImage
                     src="/assets/aistudio/rolls-royce-cullinan-chauffeur-service-events_d3e6e421.webp"
-                    alt="Chauffeur event coordination in Central London"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                    alt="Chauffeur car in London"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                   />
                 </div>
                 <div className="p-5 space-y-1">
-                  <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">Stage-Managed Punctuality</span>
-                  <h4 className="font-serif text-xl text-[#FAF7F0]">Ceremonial & Private Event Fleet Standby</h4>
+                  <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">On Time</span>
+                  <h4 className="font-serif text-xl text-[#FAF7F0]">Calm arrivals and departures</h4>
                   <p className="text-xs tglc-prose">
-                    Every chauffeur briefs with venue security in advance so exits happen calmly from discreet side courtyards.
+                    Drivers and schedules are confirmed ahead of time so you are never kept waiting.
                   </p>
                 </div>
               </div>
 
               <div className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
                 <div className="aspect-[16/10] overflow-hidden">
-                  <img
+                  <SmartImage
                     src="/assets/aistudio/01-Neo-Bankside-Luxury-Penthouse-London-England-UK-640x360_c8f27abb.jpg"
-                    alt="Turnkey London residence staging"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                    alt="London apartment interior"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                   />
                 </div>
                 <div className="p-5 space-y-1">
-                  <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">Continuous Memory</span>
-                  <h4 className="font-serif text-xl text-[#FAF7F0]">Turnkey Residence & Wardrobe Preparation</h4>
+                  <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">Ready Before You Arrive</span>
+                  <h4 className="font-serif text-xl text-[#FAF7F0]">Homes kept ready for your stay</h4>
                   <p className="text-xs tglc-prose">
-                    Seasonal wardrobe rotations, floral preferences, and cellar restocks execute automatically prior to each return to town.
+                    We remember your preferences so your home or suite is prepared before you step through the door.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* First 90 Days Household Calibration & Live Cross-Desk Schedule */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
-              <div className="lg:col-span-6 p-7 bg-[#0D1017] border border-[#242630] space-y-4">
-                <div className="border-b border-[#20232E] pb-3 flex items-center justify-between">
-                  <h3 className="font-serif text-2xl text-[#FAF7F0]">First 90 Days Calibration Schedule</h3>
-                  <span className="font-mono text-[11px] text-[#E2BA6B]">Household Sync</span>
-                </div>
-                <div className="space-y-4">
-                  {[
-                    {
-                      window: 'Days 01 – 14',
-                      focus: 'Dossier Encoding & Security Aliasing',
-                      detail: 'Passport/visa vault mapping, medical allergies, preferred FBO gates, and Signal comms channels encrypted.',
-                    },
-                    {
-                      window: 'Days 15 – 45',
-                      focus: 'Residence, Fleet & Cellar Audit',
-                      detail: 'London & country estate keyholding inventory, preferred driver roster vetting, and cellar provenance cataloging.',
-                    },
-                    {
-                      window: 'Days 46 – 90',
-                      focus: 'Annual Season & Family Office Alignment',
-                      detail: 'Twelve-month calendar locked across Wimbledon, Venice, Gstaad, and quarterly ledger reconciliation formats.',
-                    },
-                  ].map((phase) => (
-                    <div key={phase.window} className="p-4 bg-[#12151E] border border-[#20232E] space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs text-[#E2BA6B]">{phase.window}</span>
-                        <span className="text-xs text-[#FAF7F0] font-medium">{phase.focus}</span>
-                      </div>
-                      <p className="text-xs text-[#D4D8E2] font-light leading-relaxed">{phase.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="lg:col-span-6 p-7 bg-[#0D1017] border border-[#242630] space-y-4">
-                <div className="border-b border-[#20232E] pb-3 flex items-center justify-between">
-                  <h3 className="font-serif text-2xl text-[#FAF7F0]">Cross-Desk Friday Choreography</h3>
-                  <span className="font-mono text-[11px] text-[#E2BA6B]">Sample Live Mandate</span>
-                </div>
-                <div className="space-y-4">
-                  {[
-                    {
-                      time: '14:10 GMT · Farnborough EGLF',
-                      task: 'Wheels-down clearance; two armoured British SUVs meet aircraft steps; luggage dispatched straight to Belgrave Square.',
-                    },
-                    {
-                      time: '16:30 GMT · Old Bond Street',
-                      task: 'Shuttered private salon viewing of independent tourbillon allocation with master watchmaker and tea service.',
-                    },
-                    {
-                      time: '20:45 GMT · Mount Street Cellar',
-                      task: 'Acoustic corner supper booth under alias reservation; pre-decanted 1989 Left Bank pairing awaiting Principal.',
-                    },
-                    {
-                      time: '23:55 GMT · Shoreditch Loft',
-                      task: 'Rear service lift transition to sound-isolated rotary vinyl & hip-hop lounge session with close protection standby.',
-                    },
-                  ].map((log) => (
-                    <div key={log.time} className="p-4 bg-[#12151E] border border-[#20232E] space-y-1">
-                      <span className="font-mono text-xs text-[#E2BA6B] block">{log.time}</span>
-                      <p className="text-xs text-[#D4D8E2] font-light leading-relaxed">{log.task}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Confidential Dossier Card (Clean Photo instead of Standalone Crest) */}
+            {/* Clean Introduction CTA Card */}
             <motion.div
               {...REVEAL_SECTION}
               className="bg-[#0D1017] border border-[#2A2D38] grid grid-cols-1 lg:grid-cols-12 overflow-hidden"
             >
               <div className="lg:col-span-4 min-h-[220px] bg-black overflow-hidden group">
-                <img
+                <SmartImage
                   src="/assets/aistudio/tglc_st_james_salon.jpg"
-                  alt="TGLC House Consultation Room"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                  alt="TGLC consultation room in Mayfair"
+                  sizes="(max-width: 1024px) 100vw, 33vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                 />
               </div>
               <div className="lg:col-span-8 p-7 sm:p-9 space-y-3 flex flex-col justify-center">
-                <span className="text-xs uppercase tracking-widest text-[#E2BA6B]">Confidential Architecture</span>
+                <span className="text-xs uppercase tracking-widest text-[#E2BA6B]">Get Started</span>
                 <h3 className="font-serif text-2xl sm:text-3xl text-[#FAF7F0]">
-                  The Confidential Member Dossier
+                  Tell us what you need
                 </h3>
                 <p className="text-xs sm:text-sm tglc-prose text-[#D4D8E2]">
-                  Following induction, your dedicated Lifestyle Manager curates an encrypted household dossier. Everything—from preferred aircraft cabin tail numbers and floral sensitivities to trusted private tutors and security protocols—lives quietly behind our third-floor Albemarle Street doors so you never repeat an instruction twice.
+                  We can meet at our Mayfair office or speak by phone. Everything stays private from your first message.
                 </p>
                 <div className="pt-2">
                   <button
-                    onClick={() => openIntroductionModal('Membership Onboarding Inquiry')}
+                    onClick={() => openIntroductionModal('Our Approach Enquiry')}
                     className="btn-gold px-7 py-3 text-xs"
                   >
-                    Begin Your Onboarding Journey
+                    Request an introduction
                   </button>
                 </div>
               </div>
@@ -1487,144 +1007,88 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
       )}
 
       {/* ========================================================= */}
-      {/* 5. The TGLC Network Subpage */}
+      {/* 5. Our Network Subpage */}
       {/* ========================================================= */}
       {subPage === 'network' && (
         <div className="space-y-10 sm:space-y-12">
-          <section className="max-w-7xl mx-auto px-5 sm:px-8">
-            <div className="relative min-h-[390px] sm:min-h-[450px] flex items-end overflow-hidden border border-[#242630] bg-[#0D1017]">
-              <motion.img
-                {...HERO_KEN_BURNS}
-                src="/assets/aistudio/consortium_network_global.jpg"
-                alt="Global keyholder network and Mediterranean coastal sanctuaries"
-                referrerPolicy="no-referrer"
-                className="absolute inset-0 w-full h-full object-cover brightness-105 contrast-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#07080B] via-[#07080B]/45 to-[#07080B]/20" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#07080B]/90 via-[#07080B]/45 to-transparent hidden sm:block" />
-
+          <div className="max-w-7xl mx-auto px-5 sm:px-8">
+            <EditorialHeroCarousel
+              slides={CONSORTIUM_SUBPAGE_SLIDES.network}
+              className="min-h-[390px] sm:min-h-[450px] flex items-end border border-[#242630]"
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              scrimVariant="bottom-left"
+              controlsPosition="bottom-right"
+            >
               <motion.div
                 initial={{ opacity: 0.01, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65 }}
-                className="relative z-10 p-6 sm:p-10 max-w-4xl space-y-3.5"
+                className="relative z-10 p-6 sm:p-10 pb-16 sm:pb-12 max-w-4xl space-y-3.5"
               >
                 <span className="tglc-kicker text-[11px] block">
-                  Curated Global Ecosystem
+                  London & Worldwide
                 </span>
                 <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#FAF7F0] leading-[1.06] text-balance">
-                  The TGLC Network
+                  Our network.
                 </h1>
                 <p className="font-serif italic text-lg sm:text-2xl text-[#E2BA6B] leading-relaxed">
-                  A private fellowship of custodians, pilots, scholars, and masters built purely on mutual standards.
+                  “Trusted people in London and around the world.”
                 </p>
                 <p className="tglc-prose text-sm max-w-2xl">
-                  Rather than subscribing to generic vendor software, TGLC works directly with named principals—aviation owners, Harley Street consultants, museum keepers, and aristocratic estates across Europe, North America, and Japan.
+                  We work with trusted hotels, venues, makers and specialists in London and around the world. We choose partners for quality and discretion.
                 </p>
               </motion.div>
-            </div>
-          </section>
+            </EditorialHeroCarousel>
+          </div>
 
-          {/* Two Large Pictorial Highlights */}
+          {/* Two Pictorial Highlights */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
               <div className="aspect-[16/10] overflow-hidden">
-                <img
+                <SmartImage
                   src="/assets/aistudio/monaco_harbor_twilight_1794391696625.jpg"
-                  alt="Mediterranean superyacht berths and maritime captains at twilight"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                  alt="Harbour yachts at twilight"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                 />
               </div>
               <div className="p-6 space-y-2">
-                <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Fleet & Maritime Principals</span>
-                <h3 className="font-serif text-2xl text-[#FAF7F0]">Direct-to-Owner Operations</h3>
+                <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Travel & Maritime</span>
+                <h3 className="font-serif text-2xl text-[#FAF7F0]">Trusted travel specialists</h3>
                 <p className="text-xs sm:text-sm tglc-prose">
-                  Instead of routing through retail charter brokers, we liaise straight with AOC flight owners, Thames river captains, and Mediterranean superyacht masters with zero hidden margin stacking.
+                  We work with licensed aviation, maritime and ground transport providers chosen for safety and care.
                 </p>
               </div>
             </motion.div>
 
             <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
               <div className="aspect-[16/10] overflow-hidden">
-                <img
+                <SmartImage
                   src="/assets/aistudio/royal_opera_gallery.jpg"
-                  alt="Covent Garden Royal Opera private cultural custodians"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                  alt="London cultural venue"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                 />
               </div>
               <div className="p-6 space-y-2">
-                <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">Cultural Patronage</span>
-                <h3 className="font-serif text-2xl text-[#F4F1EA]">Behind the Velvet Rope</h3>
+                <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">Hospitality & Culture</span>
+                <h3 className="font-serif text-2xl text-[#F4F1EA]">Hotels, dining and arts</h3>
                 <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                  Our ties with Covent Garden conductors, museum keepers in London and Paris, and independent gallery directors unlock closed collections for serene private family viewings.
+                  We arrange dining, stays, tickets and private appointments across leading cultural cities, subject to availability.
                 </p>
               </div>
             </motion.div>
           </section>
 
-          {/* 6 Network Pillars */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                tag: 'Aviation & Maritime',
-                title: 'Vetted Operators',
-                desc: 'Direct agreements with Part 135 and EASA licensed fleet owners and private yacht captains—zero opaque brokerage layering.',
-              },
-              {
-                tag: 'Arts & Antiquities',
-                title: 'Curators & Dealers',
-                desc: 'Independent keepers across Cork Street, St James’s, and the Marais offering provenance authentication and quiet acquisitions.',
-              },
-              {
-                tag: 'Private Estates',
-                title: 'Aristocratic Custodians',
-                desc: 'Historic country houses, Highland sporting lodges, and Mediterranean clifftop villas never offered on public platforms.',
-              },
-              {
-                tag: 'Health & Longevity',
-                title: 'Harley Street Alliance',
-                desc: 'Swift confidential introductions to leading London consultants, private diagnostic clinics, and Swiss alpine recovery houses.',
-              },
-              {
-                tag: 'Security & Transit',
-                title: 'SIA Close Protection',
-                desc: 'Diplomatic-trained close protection teams selected for unassuming poise during family travel and ceremonial evenings.',
-              },
-              {
-                tag: 'Fine Craft & Horology',
-                title: 'Independent Masters',
-                desc: 'Geneva movement artisans, Savile Row head cutters, and royal warrant silversmiths accepting private commissions.',
-              },
-            ].map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0.9, y: 14 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.01 }}
-                transition={{ duration: 0.45, delay: i * 0.05 }}
-                whileHover={{ y: -3 }}
-                className="p-7 bg-[#12141A] border border-[#242630] hover:border-[#8B672B] transition-colors space-y-2.5"
-              >
-                <span className="text-[11px] uppercase tracking-widest text-[#CFA85E] block">
-                  {item.tag}
-                </span>
-                <h3 className="font-serif text-2xl text-[#F4F1EA]">{item.title}</h3>
-                <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">{item.desc}</p>
-              </motion.div>
-            ))}
-          </section>
-
-          {/* Regional Chapters Triptych */}
+          {/* Regional Imagery Triptych */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-5">
             <div className="border-b border-[#222530] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
               <div>
                 <span className="text-xs uppercase tracking-[0.22em] text-[#CFA85E] block mb-1">Global Reach</span>
-                <h2 className="font-serif text-3xl text-[#F4F1EA]">Continental Corridors</h2>
+                <h2 className="font-serif text-3xl text-[#F4F1EA]">Where we help</h2>
               </div>
               <p className="text-xs text-[#9C968A] max-w-md font-light">
-                Every European and intercontinental movement links directly back to your Mayfair team for uninterrupted continuity.
+                Every trip links back to your Mayfair team, so you only deal with one point of contact.
               </p>
             </div>
 
@@ -1633,20 +1097,20 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                 {
                   img: '/assets/aistudio/five_star_mayfair_suite.jpg',
                   region: 'United Kingdom',
-                  title: 'London, Oxford & The Highlands',
-                  text: 'Five-star Mayfair suites, Cotswold manor stays, VIP stadium boxes, and seamless executive airport chauffeurs across London.',
+                  title: 'London & the Countryside',
+                  text: 'Hotels, dining, events, homes and travel across London and the UK.',
                 },
                 {
                   img: '/assets/aistudio/9a35e56e-8aec-463b-a39b-a06bbfb6ad06_ac512cac.jpg',
-                  region: 'Continental Europe & Mediterranean',
-                  title: 'Monaco, Geneva, Milan & Tuscany',
-                  text: 'Coastal Mediterranean villas, Alpine helicopter corridors above Gstaad and St Moritz, and private yacht berths in Port Hercule.',
+                  region: 'Europe',
+                  title: 'Cities, Coast & Alps',
+                  text: 'Support for stays, dining and travel across Europe’s capitals, resorts and ski towns.',
                 },
                 {
                   img: '/assets/aistudio/imagereader_3bfec03a.webp',
-                  region: 'Pacific & Transatlantic',
-                  title: 'New York, Indonesia, Tonga & Tokyo',
-                  text: 'Direct personal relationships spanning Southeast Asian sanctuaries, South Pacific cultural liaison, and Manhattan or Tokyo dispatches.',
+                  region: 'Worldwide',
+                  title: 'North America & Asia',
+                  text: 'Coordinated itineraries and local contacts when business or family takes you further afield.',
                 },
               ].map((cor, idx) => (
                 <motion.div
@@ -1659,16 +1123,18 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                   className="bg-[#12141A] border border-[#242630] hover:border-[#CFA85E]/70 transition-colors overflow-hidden group relative"
                 >
                   <div className="aspect-[16/10] overflow-hidden">
-                    <img
+                    <SmartImage
                       src={cor.img}
                       alt={cor.title}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                     />
                   </div>
                   <div className="p-6 space-y-1.5">
                     <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">{cor.region}</span>
-                    <h4 className="font-serif text-xl text-[#FAF7F0] group-hover:text-[#E2BA6B] transition-colors">{cor.title}</h4>
+                    <h4 className="font-serif text-xl text-[#FAF7F0] group-hover:text-[#E2BA6B] transition-colors">
+                      <span className="card-title-underline">{cor.title}</span>
+                    </h4>
                     <p className="text-xs text-[#D4D8E2] tglc-prose">{cor.text}</p>
                   </div>
                   <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#E2BA6B] scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
@@ -1676,75 +1142,32 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
               ))}
             </div>
 
-            {/* Eight Global Regional Desks Directory (Balanced 4x2 Desktop / 2x4 Tablet) */}
+            {/* Clean Cities Grid */}
             <div className="bg-[#0D1017] border border-[#242630] p-6 sm:p-8 space-y-5 mt-6">
               <div className="border-b border-[#20232E] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
                 <div>
-                  <span className="tglc-kicker text-[11px] block mb-1">Regional Resident Corridors</span>
+                  <span className="tglc-kicker text-[11px] block mb-1">Key Cities</span>
                   <h3 className="font-serif text-2xl sm:text-3xl text-[#FAF7F0]">
-                    Eight Active Corridors Connected Directly to Albemarle Street
+                    Cities we regularly arrange
                   </h3>
                 </div>
-                <span className="font-mono text-xs text-[#E2BA6B]">Opening Doors That Don’t Usually Exist</span>
+                <span className="font-mono text-xs text-[#E2BA6B]">All coordinated from Mayfair</span>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  {
-                    city: 'London · Mayfair HQ',
-                    address: '3rd Floor, 45 Albemarle Street, W1S 4JL',
-                    remit: 'Central coordination desk, Farnborough & Heathrow VIP transfers, sporting hospitality, and private London stays.',
-                  },
-                  {
-                    city: 'Geneva · Rue du Rhône',
-                    address: 'Lakefront & Alpine Corridor',
-                    remit: 'Private alpine chalet staging, helicopter transfers to Gstaad & Verbier, and Swiss horology introductions.',
-                  },
-                  {
-                    city: 'Paris · Place Vendôme',
-                    address: '1st Arrondissement Fashion & Culture',
-                    remit: 'Private salon appointments, confidential museum tours, and executive chauffeur standby from Le Bourget.',
-                  },
-                  {
-                    city: 'Monaco · Port Hercule',
-                    address: 'Principality & Riviera Quayside',
-                    remit: 'Grand Prix terrace hospitality, yacht tender provisioning, and discreet Cap Ferrat summer villa sourcing.',
-                  },
-                  {
-                    city: 'Milan & Florence',
-                    address: 'Lombardy & Tuscan Sanctuary Desk',
-                    remit: 'Historic courtyard stays, Lake Como Riva transfers, artisanal tailoring, and private Tuscan wine tables.',
-                  },
-                  {
-                    city: 'New York · Upper East Side',
-                    address: 'Manhattan & Teterboro Aviation Hub',
-                    remit: 'Unlisted Manhattan dining rooms, ringside Madison Square Garden access, and cross-town black fleet dispatch.',
-                  },
-                  {
-                    city: 'Jakarta, Bali & Southeast Asia',
-                    address: 'Led via Melize Nastaasia’s Desk',
-                    remit: 'Corporate roadshows, private resort sanctuaries, and bilateral executive logistics linking Southeast Asia with London.',
-                  },
-                  {
-                    city: 'Tokyo & South Pacific',
-                    address: 'Ginza Chūō-ku & Tonga Cultural Liaison',
-                    remit: 'Intimate omakase counters, Kyoto ryokan sanctuaries, and Pacific hospitality stewardship with warmth and precision.',
-                  },
-                ].map((desk, dIdx) => (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {NETWORK_CITIES.map((city, dIdx) => (
                   <motion.div
-                    key={desk.city}
+                    key={city}
                     initial={{ opacity: 0.9, y: 12 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.01 }}
                     transition={{ duration: 0.4, delay: dIdx * 0.04 }}
-                    whileHover={{ y: -3 }}
-                    className="p-5 bg-[#12151E] border border-[#222633] hover:border-[#CFA85E]/70 transition-colors space-y-2 relative overflow-hidden group"
+                    whileHover={{ y: -2 }}
+                    className="p-5 bg-[#12151E] border border-[#222633] hover:border-[#CFA85E]/70 transition-colors relative overflow-hidden group"
                   >
-                    <span className="font-serif text-lg text-[#FAF7F0] block group-hover:text-[#E2BA6B] transition-colors">
-                      {desk.city}
+                    <span className="font-serif text-xl text-[#FAF7F0] block group-hover:text-[#E2BA6B] transition-colors">
+                      {city}
                     </span>
-                    <span className="font-mono text-[11px] text-[#E2BA6B] block">{desk.address}</span>
-                    <p className="text-xs text-[#D4D8E2] font-light leading-relaxed">{desk.remit}</p>
                     <div className="absolute bottom-0 inset-x-0 h-[2px] bg-[#E2BA6B] scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
                   </motion.div>
                 ))}
@@ -1755,97 +1178,93 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
       )}
 
       {/* ========================================================= */}
-      {/* 6. Our London Enclaves & Interactive Map Subpage */}
+      {/* 6. Our London & Interactive Map Subpage */}
       {/* ========================================================= */}
       {subPage === 'our-london' && (
         <div className="space-y-10 sm:space-y-12">
-          <section className="max-w-7xl mx-auto px-5 sm:px-8">
-            <div className="relative min-h-[390px] sm:min-h-[450px] flex items-end overflow-hidden border border-[#242630] bg-[#0D1017]">
-              <motion.img
-                {...HERO_KEN_BURNS}
-                src="/assets/aistudio/hero_luxury_london_residence_1794298893032.jpg"
-                alt="Mayfair and St James's heritage architectural enclave"
-                referrerPolicy="no-referrer"
-                className="absolute inset-0 w-full h-full object-cover brightness-105 contrast-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#07080B] via-[#07080B]/45 to-[#07080B]/20" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#07080B]/90 via-[#07080B]/45 to-transparent hidden sm:block" />
-
+          <div className="max-w-7xl mx-auto px-5 sm:px-8">
+            <EditorialHeroCarousel
+              slides={CONSORTIUM_SUBPAGE_SLIDES['our-london']}
+              className="min-h-[390px] sm:min-h-[450px] flex items-end border border-[#242630]"
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              scrimVariant="bottom-left"
+              controlsPosition="bottom-right"
+            >
               <motion.div
                 initial={{ opacity: 0.01, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65 }}
-                className="relative z-10 p-6 sm:p-10 max-w-4xl space-y-3.5"
+                className="relative z-10 p-6 sm:p-10 pb-16 sm:pb-12 max-w-4xl space-y-3.5"
               >
                 <span className="tglc-kicker text-[11px] block">
-                  Cartography of Access & Private Sanctuary
+                  London Neighbourhoods
                 </span>
                 <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#FAF7F0] leading-[1.06] text-balance">
-                  Our London: The Private Map
+                  Our London
                 </h1>
                 <p className="font-serif italic text-lg sm:text-2xl text-[#E2BA6B] leading-relaxed">
-                  “London, understood street by street, livery by livery.”
+                  “The neighbourhoods we know best.”
                 </p>
                 <p className="tglc-prose text-sm max-w-2xl">
-                  London reveals its deepest character in quiet garden squares, mews courtyards, and upstairs drawing rooms off Mount Street and Pall Mall. Inspect our working geography below.
+                  We are based in Mayfair and work across central London every day. Explore the areas below.
                 </p>
               </motion.div>
-            </div>
-          </section>
+            </EditorialHeroCarousel>
+          </div>
 
-          {/* Interactive High-Fidelity Consortium Locations Map Section */}
+          {/* Interactive Map Section */}
           <ConsortiumLocationsMap />
 
-          {/* Two Visible Editorial London Vignettes */}
+          {/* Two London Vignettes */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
               <div className="aspect-[16/10] overflow-hidden">
-                <img
+                <SmartImage
                   src="/assets/aistudio/liberty-department-store-640x360_44860915.jpg"
-                  alt="Liberty Regent Street heritage flagship and private dressing salons"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                  alt="Historic Regent Street architecture in London"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                 />
               </div>
               <div className="p-6 space-y-2">
                 <span className="text-[11px] uppercase tracking-widest text-[#E2BA6B]">Regent Street & Soho</span>
-                <h3 className="font-serif text-2xl text-[#FAF7F0]">After-Hours Heritage Salons</h3>
+                <h3 className="font-serif text-2xl text-[#FAF7F0]">Shopping and dining in the West End</h3>
                 <p className="text-xs sm:text-sm tglc-prose">
-                  Private doors opened once public crowds depart, letting our members browse archival textiles, bespoke trunks, and rare gifts in peaceful privacy.
+                  We help you plan personal shopping, dining and theatre evenings across central London.
                 </p>
               </div>
             </motion.div>
 
             <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
               <div className="aspect-[16/10] overflow-hidden">
-                <img
+                <SmartImage
                   src="/assets/aistudio/01-Lethbridge-House-20-Cornwall-Terrace-Marylebone-London-UK-640x360_b59e806c.jpg"
-                  alt="Regent's Park Nash terrace residences in Marylebone"
-                  referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
+                  alt="Regency terrace near Regent's Park in Marylebone"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
                 />
               </div>
               <div className="p-6 space-y-2">
                 <span className="text-[11px] uppercase tracking-widest text-[#CFA85E]">Marylebone & Regent’s Park</span>
-                <h3 className="font-serif text-2xl text-[#F4F1EA]">Regency Nash Terraces & Village Calm</h3>
+                <h3 className="font-serif text-2xl text-[#F4F1EA]">Quiet terraces and village streets</h3>
                 <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                  Stucco-fronted serenity minutes from Harley Street medical chambers, specialist antiquarian bookshops, and private garden enclosures.
+                  Leafy streets, independent shops and calm residential squares a short walk from Mayfair.
                 </p>
               </div>
             </motion.div>
           </section>
 
-          {/* Deep Enclave Profiles & Cultural Dossiers */}
+          {/* Neighbourhood Profiles */}
           <div className="max-w-7xl mx-auto px-5 sm:px-8 space-y-8">
             <motion.div {...REVEAL_SECTION} className="border-b border-[#222530] pb-5">
               <span className="text-xs uppercase tracking-[0.2em] text-[#CFA85E] font-medium block mb-1.5">
-                Detailed Neighbourhood Dossiers
+                London Areas
               </span>
               <h2 className="font-serif text-3xl sm:text-4xl text-[#F4F1EA]">
-                Six Villages Within One Capital
+                Neighbourhoods we know well
               </h2>
               <p className="text-xs sm:text-sm text-[#9C968A] mt-2 max-w-2xl font-light leading-relaxed">
-                From the historic clubland of St James’s to white-stucco squares in Belgravia and rooftop sanctums above Bankside, select an enclave below to review our local privileges.
+                Select an area below to see how we can help during your time in London.
               </p>
             </motion.div>
 
@@ -1881,10 +1300,10 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                       className="space-y-6"
                     >
                       <div className="aspect-[16/9] w-full overflow-hidden bg-[#181A22] border border-[#242630]">
-                        <img
+                        <SmartImage
                           src={active.image}
                           alt={active.name}
-                          referrerPolicy="no-referrer"
+                          sizes="(max-width: 1024px) 100vw, 58vw"
                           className="w-full h-full object-cover brightness-105 contrast-105"
                         />
                       </div>
@@ -1896,7 +1315,7 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
 
                       <div className="border-t border-[#222530] pt-5 space-y-3">
                         <h4 className="text-xs uppercase tracking-widest text-[#E2BA6B]">
-                          TGLC Access Highlights & Secret Addresses
+                          How we can help here
                         </h4>
                         <ul className="space-y-2.5">
                           {active.highlights.map((h, i) => (
@@ -1908,28 +1327,19 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                         </ul>
                       </div>
 
-                      <div className="p-4 bg-[#0D1017] border border-[#20232E] space-y-1.5">
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-[#E2BA6B] block">
-                          After-Hours Mews & Sub-Rosa Access Note
-                        </span>
-                        <p className="text-xs text-[#D4D8E2] font-light leading-relaxed">
-                          Chauffeur arrivals route via service lanes behind {active.name} with house-registered security liaison pre-notified, enabling late-evening salon exits or direct transition toward East London rotary-vinyl lofts without paparazzi exposure.
-                        </p>
-                      </div>
-
                       <div className="pt-5 border-t border-[#222530] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <button
-                          onClick={() => openIntroductionModal(`Inquiry regarding bespoke arrangements in ${active.name}`)}
+                          onClick={() => openIntroductionModal(`Enquiry about ${active.name}`)}
                           className="btn-gold px-7 py-3 text-xs inline-flex items-center gap-1.5"
                         >
-                          <span>Arrange an Itinerary in {active.name}</span>
+                          <span>Request an introduction</span>
                           <ArrowUpRight className="w-3.5 h-3.5" />
                         </button>
                         <a
                           href="#consortium-locations"
                           className="text-xs text-[#E2BA6B] hover:text-[#FAF7F0] flex items-center gap-1.5 transition-colors"
                         >
-                          <span>View on Interactive Map</span>
+                          <span>View on map</span>
                           <Compass className="w-3.5 h-3.5" />
                         </a>
                       </div>
@@ -1947,121 +1357,39 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
       {/* ========================================================= */}
       {subPage === 'privacy' && (
         <div className="space-y-10 sm:space-y-12">
-          <section className="max-w-7xl mx-auto px-5 sm:px-8">
-            <div className="relative min-h-[390px] sm:min-h-[450px] flex items-end overflow-hidden border border-[#242630] bg-[#0D1017]">
-              <motion.img
-                {...HERO_KEN_BURNS}
-                src="/assets/aistudio/consortium_privacy_vault.jpg"
-                alt="High security biometric Faraday vault and counter-surveillance enclosure"
-                referrerPolicy="no-referrer"
-                className="absolute inset-0 w-full h-full object-cover brightness-105 contrast-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#07080B] via-[#07080B]/45 to-[#07080B]/20" />
-              <div className="absolute inset-0 bg-gradient-to-r from-[#07080B]/90 via-[#07080B]/45 to-transparent hidden sm:block" />
-
+          <div className="max-w-7xl mx-auto px-5 sm:px-8">
+            <EditorialHeroCarousel
+              slides={CONSORTIUM_SUBPAGE_SLIDES.privacy}
+              className="min-h-[390px] sm:min-h-[450px] flex items-end border border-[#242630]"
+              sizes="(max-width: 1280px) 100vw, 1280px"
+              scrimVariant="bottom-left"
+              controlsPosition="bottom-right"
+            >
               <motion.div
                 initial={{ opacity: 0.01, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.65 }}
-                className="relative z-10 p-6 sm:p-10 max-w-4xl space-y-3.5"
+                className="relative z-10 p-6 sm:p-10 pb-16 sm:pb-12 max-w-4xl space-y-3.5"
               >
                 <span className="tglc-kicker text-[11px] block">
-                  Confidentiality Protocol
+                  Privacy & Discretion
                 </span>
                 <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-[#FAF7F0] leading-[1.06] text-balance">
-                  Privacy & Discretion
+                  Your privacy, protected.
                 </h1>
                 <p className="font-serif italic text-lg sm:text-2xl text-[#E2BA6B] leading-relaxed">
-                  “The finest service leaves no footprint.”
+                  “Discretion comes first in everything we do.”
                 </p>
                 <p className="tglc-prose text-sm max-w-2xl">
-                  In an age of unsolicited digital profiling and public photography, we maintain technical, legal, and physical air-gaps around your household’s movements, relationships, and acquisitions.
+                  We keep your plans and personal details private. You stay in control of what is shared.
                 </p>
               </motion.div>
-            </div>
-          </section>
+            </EditorialHeroCarousel>
+          </div>
 
-          {/* Editorial Explanation + Two Large Pictorial Plates */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-8">
-            <motion.div {...REVEAL_SECTION} className="max-w-3xl space-y-3">
-              <span className="tglc-kicker text-xs block">
-                Technical, Legal & Physical Air-Gaps
-              </span>
-              <h2 className="font-serif text-3xl sm:text-4xl text-[#FAF7F0]">
-                Structured Around Need-to-Know Authority
-              </h2>
-              <p className="tglc-prose text-sm">
-                Ordinary concierges forward member emails indiscriminately to dozens of restaurants, brokers, and tour operators. At TGLC, outside suppliers never receive your direct surname or family office structure unless strictly required by border controls or legal title deeds—instead interacting through house alias accounts settled centrally from Albemarle Street.
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-              <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
-                <div className="aspect-[16/10] overflow-hidden">
-                  <img
-                    src="/assets/aistudio/01-Neo-Bankside-Luxury-Penthouse-London-England-UK-640x360_c8f27abb.jpg"
-                    alt="Private residence arrival and discretion protocol"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-                <div className="p-6 space-y-2">
-                  <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Anonymous Arrivals</span>
-                  <h3 className="font-serif text-2xl text-[#FAF7F0]">Pseudonymised Coordination</h3>
-                  <p className="text-xs sm:text-sm tglc-prose">
-                    Masked aviation tail records, discreet service entrances, and alias hotel check-ins keep family holidays and sensitive business trips out of public sight.
-                  </p>
-                </div>
-              </motion.div>
-
-              <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
-                <div className="aspect-[16/10] overflow-hidden">
-                  <img
-                    src="/assets/aistudio/tglc_st_james_salon.jpg"
-                    alt="Third-floor consultation room at 45 Albemarle Street"
-                    referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-105 transition-transform duration-700"
-                  />
-                </div>
-                <div className="p-6 space-y-2">
-                  <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">Albemarle Street Protocol</span>
-                  <h3 className="font-serif text-2xl text-[#F4F1EA]">Off-the-Record Briefings</h3>
-                  <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
-                    Sensitive acquisitions, family office relocations, and personal medical logistics are reviewed in sound-insulated rooms in Mayfair—never scattered across open emails.
-                  </p>
-                </div>
-              </motion.div>
-            </div>
-          </section>
-
-          {/* Four Confidentiality Safeguards */}
+          {/* Four Clear Privacy Commitments */}
           <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[
-              {
-                icon: Lock,
-                tag: 'Strict Need-to-Know Handling',
-                title: 'Need-to-Know Information Flow',
-                desc: 'Service partners receive only the operational minimums required to execute an arrival, almost always under TGLC house references and member aliases.',
-              },
-              {
-                icon: Shield,
-                tag: 'Ironclad Non-Disclosure',
-                title: 'Staff Non-Disclosure Deeds',
-                desc: 'Every principal, desk coordinator, and driver is bound under English Law non-disclosure covenants carrying perpetual survival clauses.',
-              },
-              {
-                icon: Check,
-                tag: 'Secure Communications',
-                title: 'Encrypted Communication Lines',
-                desc: 'Brief us through hardened Signal groups, PGP encrypted mail, or dedicated Mayfair fixed lines monitored round-the-clock.',
-              },
-              {
-                icon: Award,
-                tag: 'Zero Public Endorsements',
-                title: 'No Client Roster Publicity',
-                desc: 'We never photograph gatherings, publish member lists, accept affiliate kickbacks, or trade upon private names for promotion.',
-              },
-            ].map((item, idx) => {
+            {PRIVACY_COMMITMENTS.map((item, idx) => {
               const Icon = item.icon;
               return (
                 <motion.div
@@ -2071,71 +1399,58 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
                   viewport={{ once: true, amount: 0.01 }}
                   transition={{ duration: 0.45, delay: idx * 0.06 }}
                   whileHover={{ y: -2 }}
-                  className="p-7 bg-[#12141A] border border-[#242630] hover:border-[#8B672B] transition-colors space-y-2.5"
+                  className="p-7 bg-[#12141A] border border-[#242630] hover:border-[#8B672B] transition-colors space-y-3"
                 >
                   <div className="flex items-center gap-2.5 text-xs uppercase tracking-widest text-[#E2BA6B]">
                     <Icon className="w-4 h-4 shrink-0" />
-                    <span>{item.tag}</span>
+                    <span>{item.title}</span>
                   </div>
-                  <h3 className="font-serif text-2xl text-[#FAF7F0]">{item.title}</h3>
-                  <p className="text-xs sm:text-sm text-[#D4D8E2] leading-relaxed font-light">{item.desc}</p>
+                  <p className="font-serif text-xl sm:text-2xl text-[#FAF7F0] leading-snug">{item.line}</p>
                 </motion.div>
               );
             })}
           </section>
 
-          {/* Privacy & Technical Air-Gap Architecture Matrix */}
-          <section className="max-w-7xl mx-auto px-5 sm:px-8 space-y-5">
-            <div className="bg-[#0D1017] border border-[#242630] p-6 sm:p-8 space-y-5">
-              <div className="border-b border-[#20232E] pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-                <div>
-                  <span className="tglc-kicker text-[11px] block mb-1">Technical & Legal Shielding</span>
-                  <h3 className="font-serif text-2xl sm:text-3xl text-[#FAF7F0]">
-                    Five-Layer Air-Gap Architecture Matrix
-                  </h3>
-                </div>
-                <span className="font-mono text-xs text-[#E2BA6B]">Zero-Exposure Covenant</span>
+          {/* Two Editorial Plates */}
+          <section className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+            <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
+              <div className="aspect-[16/10] overflow-hidden">
+                <SmartImage
+                  src="/assets/aistudio/01-Neo-Bankside-Luxury-Penthouse-London-England-UK-640x360_c8f27abb.jpg"
+                  alt="Private residence in London"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
+                />
               </div>
+              <div className="p-6 space-y-2">
+                <span className="text-[11px] tracking-widest text-[#E2BA6B] uppercase">Quiet Handling</span>
+                <h3 className="font-serif text-2xl text-[#FAF7F0]">Private by default</h3>
+                <p className="text-xs sm:text-sm tglc-prose">
+                  We keep your details between you and the people arranging your plans.
+                </p>
+              </div>
+            </motion.div>
 
-              <div className="divide-y divide-[#1E212B]">
-                {[
-                  {
-                    layer: '01 · Pseudonym Registration',
-                    mechanism: 'House-Issued Operational Aliases',
-                    detail: 'Hotel check-ins, dining tables, and art fair viewings register under verified TGLC reference codes, never exposing principal surnames to junior desk staff.',
-                  },
-                  {
-                    layer: '02 · LADD & PIA Tail Suppression',
-                    mechanism: 'FAA & Eurocontrol Call-Sign Masking',
-                    detail: 'All flight legs strip public ADS-B tail tracking identifiers and block commercial flight-tracker indexing prior to engine start.',
-                  },
-                  {
-                    layer: '03 · Hardened Signal Lines',
-                    mechanism: 'Ephemeral Keys & Air-Gapped Devices',
-                    detail: 'Travel manifests and family medical details transmit exclusively via vanishing Signal groups, PGP mail, or the member portal vault.',
-                  },
-                  {
-                    layer: '04 · Acoustic Faraday Salons',
-                    mechanism: 'Bug-Swept Albemarle Briefing Chambers',
-                    detail: 'Sensitive estate negotiations and diplomatic introductions convene in RF-shielded drawing rooms swept regularly by independent counter-surveillance specialists.',
-                  },
-                  {
-                    layer: '05 · Separated Fiduciary Billing',
-                    mechanism: 'Ring-Fenced Escrow Settlement',
-                    detail: 'External vendors bill TGLC directly; consolidated statements issue quarterly or monthly strictly to your appointed Family Office controller.',
-                  },
-                ].map((row) => (
-                  <div key={row.layer} className="py-4 grid grid-cols-1 lg:grid-cols-12 gap-3 items-start">
-                    <span className="lg:col-span-3 font-mono text-xs text-[#E2BA6B]">{row.layer}</span>
-                    <span className="lg:col-span-4 font-serif text-lg text-[#FAF7F0]">{row.mechanism}</span>
-                    <p className="lg:col-span-5 text-xs text-[#D4D8E2] font-light leading-relaxed">{row.detail}</p>
-                  </div>
-                ))}
+            <motion.div {...REVEAL_SECTION} className="bg-[#0D1017] border border-[#242630] overflow-hidden group">
+              <div className="aspect-[16/10] overflow-hidden">
+                <SmartImage
+                  src="/assets/aistudio/tglc_st_james_salon.jpg"
+                  alt="Meeting room at 45 Albemarle Street"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="w-full h-full object-cover brightness-105 contrast-105 group-hover:scale-104 transition-transform duration-700"
+                />
               </div>
-            </div>
+              <div className="p-6 space-y-2">
+                <span className="text-[11px] tracking-widest text-[#CFA85E] uppercase">Mayfair Office</span>
+                <h3 className="font-serif text-2xl text-[#F4F1EA]">Private conversations</h3>
+                <p className="text-xs sm:text-sm text-[#9C968A] leading-relaxed font-light">
+                  Meet us in person at 45 Albemarle Street or speak with us by phone whenever you prefer.
+                </p>
+              </div>
+            </motion.div>
           </section>
 
-          {/* Direct Fiduciary Inquiry Plate (Replaced extra crest with clean icon frame) */}
+          {/* Direct Inquiry CTA */}
           <section className="max-w-5xl mx-auto px-5 sm:px-8">
             <motion.div
               {...REVEAL_SECTION}
@@ -2147,17 +1462,17 @@ export const ConsortiumPages: React.FC<ConsortiumPagesProps> = ({ subPage = 'ove
               <div className="space-y-1.5 text-center sm:text-left flex-1">
                 <div className="flex items-center justify-center sm:justify-start gap-2 text-xs uppercase tracking-widest text-[#E2BA6B]">
                   <Lock className="w-3.5 h-3.5" />
-                  <span>Direct Fiduciary Inquiry</span>
+                  <span>Private Enquiry</span>
                 </div>
                 <p className="text-sm text-[#D4D8E2] font-light leading-relaxed">
-                  For family offices requiring custom mutual NDAs prior to initial scoping, our Principals execute agreements ahead of your first telephone or Mayfair salon meeting.
+                  Have a question about how we handle your information? Speak with us in confidence.
                 </p>
               </div>
               <button
-                onClick={() => openIntroductionModal('Mutual NDA & Confidential Discussion')}
+                onClick={() => openIntroductionModal('Privacy & Discretion')}
                 className="btn-outline-gold px-6 py-3 text-xs whitespace-nowrap shrink-0"
               >
-                Speak in Confidence
+                Request an introduction
               </button>
             </motion.div>
           </section>

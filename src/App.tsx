@@ -3,34 +3,102 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { NavigationProvider, useNavigation } from './context/NavigationContext';
 import { Header } from './components/common/Header';
 import { BreadcrumbNav } from './components/common/BreadcrumbNav';
 import { Footer } from './components/common/Footer';
-import { IntroductionModal } from './components/common/IntroductionModal';
-import { GlobalSearchModal } from './components/search/GlobalSearchModal';
 import { CookieBanner } from './components/common/CookieBanner';
 import { HomePage } from './components/home/HomePage';
-import { ConsortiumPages } from './components/consortium/ConsortiumPages';
-import { ServicesHub } from './components/services/ServicesHub';
-import { ServiceDetailPage } from './components/services/ServiceDetailPage';
-import { SubServiceDetailPage } from './components/services/SubServiceDetailPage';
-import { MembershipPage } from './components/membership/MembershipPage';
-import { MemberPortal } from './components/portal/MemberPortal';
-import { CalendarPage } from './components/calendar/CalendarPage';
-import { JournalPage } from './components/journal/JournalPage';
-import { ArticleDetailPage } from './components/journal/ArticleDetailPage';
-import { ContactPage } from './components/contact/ContactPage';
-import { FAQPage } from './components/faq/FAQPage';
-import { LegalPages } from './components/legal/LegalPages';
-import { HiddenLondonPage } from './components/access/HiddenLondonPage';
-import { CommissionStudio } from './components/studio/CommissionStudio';
-import { CaseStudiesPage } from './components/casestudies/CaseStudiesPage';
 import { AmbienceProvider } from './context/AmbienceContext';
 import { AmbiencePlayer } from './components/common/AmbiencePlayer';
+import { ArticleListSkeleton, PillarGridSkeleton } from './components/common/EditorialSkeletons';
+import { useDocumentHead } from './seo/useDocumentHead';
+import { usePageTranslator } from './utils/pageTranslator';
 import { ArrowUp } from 'lucide-react';
 import { AnimatePresence, MotionConfig, motion, useScroll, useSpring } from 'motion/react';
+
+const ConsortiumPages = lazy(() =>
+  import('./components/consortium/ConsortiumPages').then((m) => ({ default: m.ConsortiumPages }))
+);
+const ServicesHub = lazy(() =>
+  import('./components/services/ServicesHub').then((m) => ({ default: m.ServicesHub }))
+);
+const ServiceDetailPage = lazy(() =>
+  import('./components/services/ServiceDetailPage').then((m) => ({ default: m.ServiceDetailPage }))
+);
+const SubServiceDetailPage = lazy(() =>
+  import('./components/services/SubServiceDetailPage').then((m) => ({ default: m.SubServiceDetailPage }))
+);
+const MembershipPage = lazy(() =>
+  import('./components/membership/MembershipPage').then((m) => ({ default: m.MembershipPage }))
+);
+const MembersPage = lazy(() =>
+  import('./components/members/MembersPage').then((m) => ({ default: m.MembersPage }))
+);
+const CalendarPage = lazy(() =>
+  import('./components/calendar/CalendarPage').then((m) => ({ default: m.CalendarPage }))
+);
+const JournalPage = lazy(() =>
+  import('./components/journal/JournalPage').then((m) => ({ default: m.JournalPage }))
+);
+const ArticleDetailPage = lazy(() =>
+  import('./components/journal/ArticleDetailPage').then((m) => ({ default: m.ArticleDetailPage }))
+);
+const ContactPage = lazy(() =>
+  import('./components/contact/ContactPage').then((m) => ({ default: m.ContactPage }))
+);
+const FAQPage = lazy(() =>
+  import('./components/faq/FAQPage').then((m) => ({ default: m.FAQPage }))
+);
+const LegalPages = lazy(() =>
+  import('./components/legal/LegalPages').then((m) => ({ default: m.LegalPages }))
+);
+const HiddenLondonPage = lazy(() =>
+  import('./components/access/HiddenLondonPage').then((m) => ({ default: m.HiddenLondonPage }))
+);
+const CommissionStudio = lazy(() =>
+  import('./components/studio/CommissionStudio').then((m) => ({ default: m.CommissionStudio }))
+);
+const CaseStudiesPage = lazy(() =>
+  import('./components/casestudies/CaseStudiesPage').then((m) => ({ default: m.CaseStudiesPage }))
+);
+const CulturalHospitalityPage = lazy(() =>
+  import('./components/culture/CulturalHospitalityPage').then((m) => ({ default: m.CulturalHospitalityPage }))
+);
+const GlobalSearchModal = lazy(() =>
+  import('./components/search/GlobalSearchModal').then((m) => ({ default: m.GlobalSearchModal }))
+);
+const IntroductionModal = lazy(() =>
+  import('./components/common/IntroductionModal').then((m) => ({ default: m.IntroductionModal }))
+);
+
+const RouteFallback: React.FC<{ isEditorial?: boolean }> = ({ isEditorial = false }) => (
+  <div className="min-h-[70vh] bg-[#07080B] max-w-7xl mx-auto px-5 sm:px-8 py-12">
+    {isEditorial ? <ArticleListSkeleton includeLead cardCount={3} /> : <PillarGridSkeleton variant="consortium" count={6} />}
+  </div>
+);
+
+const LazyModals: React.FC = () => {
+  const { isSearchOpen, isIntroModalOpen } = useNavigation();
+  const [hasOpenedSearch, setHasOpenedSearch] = useState(false);
+  const [hasOpenedIntro, setHasOpenedIntro] = useState(false);
+
+  useEffect(() => {
+    if (isSearchOpen) setHasOpenedSearch(true);
+  }, [isSearchOpen]);
+
+  useEffect(() => {
+    if (isIntroModalOpen) setHasOpenedIntro(true);
+  }, [isIntroModalOpen]);
+
+  return (
+    <Suspense fallback={null}>
+      {(hasOpenedSearch || isSearchOpen) && <GlobalSearchModal />}
+      {(hasOpenedIntro || isIntroModalOpen) && <IntroductionModal />}
+    </Suspense>
+  );
+};
 
 const PageContent: React.FC = () => {
   const { route } = useNavigation();
@@ -40,6 +108,8 @@ const PageContent: React.FC = () => {
       return <HomePage />;
     case 'consortium':
       return <ConsortiumPages subPage="overview" />;
+    case 'consortium-concierge':
+      return <ConsortiumPages subPage="concierge" />;
     case 'about':
       return <ConsortiumPages subPage="about" />;
     case 'ethos':
@@ -52,6 +122,8 @@ const PageContent: React.FC = () => {
       return <ConsortiumPages subPage="our-london" />;
     case 'privacy-discretion':
       return <ConsortiumPages subPage="privacy" />;
+    case 'cultural-traditions':
+      return <CulturalHospitalityPage />;
     case 'services':
       return <ServicesHub />;
     case 'service-detail':
@@ -65,7 +137,7 @@ const PageContent: React.FC = () => {
     case 'case-studies':
       return <CaseStudiesPage />;
     case 'member-portal':
-      return <MemberPortal />;
+      return <MembersPage />;
     case 'calendar':
       return <CalendarPage />;
     case 'journal':
@@ -79,25 +151,25 @@ const PageContent: React.FC = () => {
     case 'hidden-london':
       return <HiddenLondonPage initialSubPage="all" />;
     case 'hidden-london-subterranean':
-      return <HiddenLondonPage initialSubPage="subterranean" />;
+      return <HiddenLondonPage initialSubPage="underground" />;
     case 'hidden-london-industrial':
-      return <HiddenLondonPage initialSubPage="industrial" />;
+      return <HiddenLondonPage initialSubPage="architecture" />;
     case 'hidden-london-combat':
-      return <HiddenLondonPage initialSubPage="underground-combat" />;
+      return <HiddenLondonPage initialSubPage="fight-nights" />;
     case 'hidden-london-gaming':
-      return <HiddenLondonPage initialSubPage="clandestine-gaming" />;
+      return <HiddenLondonPage initialSubPage="casino-nights" />;
     case 'hidden-london-maritime':
-      return <HiddenLondonPage initialSubPage="maritime-nocturne" />;
+      return <HiddenLondonPage initialSubPage="thames-after-dark" />;
     case 'hidden-london-gastronomy':
-      return <HiddenLondonPage initialSubPage="counter-culture" />;
+      return <HiddenLondonPage initialSubPage="supper-clubs" />;
     case 'hidden-london-exploration':
-      return <HiddenLondonPage initialSubPage="urban-exploration" />;
+      return <HiddenLondonPage initialSubPage="rooftops" />;
     case 'hidden-london-after-hours':
-      return <HiddenLondonPage initialSubPage="after-hours" />;
+      return <HiddenLondonPage initialSubPage="jazz" />;
     case 'hidden-london-urban-clubs':
-      return <HiddenLondonPage initialSubPage="urban-clubs" />;
+      return <HiddenLondonPage initialSubPage="club-nights" />;
     case 'hidden-london-itinerary':
-      return <HiddenLondonPage initialSubPage="itinerary" />;
+      return <HiddenLondonPage initialSubPage="24-hours" />;
     case 'privacy-policy':
     case 'terms':
     case 'cookie-policy':
@@ -112,22 +184,27 @@ const PageContent: React.FC = () => {
 };
 
 function PageContentWrapper() {
-  const { route } = useNavigation();
+  const { route, language } = useNavigation();
+  useDocumentHead(route);
   const routeKey = `${route.page}-${route.serviceId || ''}-${route.subServiceId || ''}-${route.articleSlug || ''}-${route.subSection || ''}`;
+  usePageTranslator(language, routeKey);
+  const isEditorial = route.page === 'journal' || route.page === 'journal-article' || route.page === 'calendar' || route.page === 'case-studies';
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={routeKey}
-        initial={{ opacity: 0.88, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0.9, y: -4 }}
-        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full"
-      >
-        <PageContent />
-      </motion.div>
-    </AnimatePresence>
+    <Suspense fallback={<RouteFallback isEditorial={isEditorial} />}>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={routeKey}
+          initial={{ opacity: 0.88, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0.9, y: -4 }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full"
+        >
+          <PageContent />
+        </motion.div>
+      </AnimatePresence>
+    </Suspense>
   );
 }
 
@@ -178,11 +255,15 @@ function GlobalScrollEnhancements() {
   );
 }
 
-export default function App() {
+export interface AppProps {
+  url?: string;
+}
+
+export default function App({ url }: AppProps = {}) {
   return (
     <MotionConfig reducedMotion="user">
       <AmbienceProvider>
-        <NavigationProvider>
+        <NavigationProvider initialUrl={url}>
           <div className="min-h-screen bg-[#07080B] text-[#D4D8E2] flex flex-col font-sans selection:bg-[#B98633]/30 selection:text-[#FAF7F0]">
             <GlobalScrollEnhancements />
             <Header />
@@ -191,8 +272,7 @@ export default function App() {
               <PageContentWrapper />
             </main>
             <Footer />
-            <GlobalSearchModal />
-            <IntroductionModal />
+            <LazyModals />
             <CookieBanner />
             <AmbiencePlayer />
           </div>

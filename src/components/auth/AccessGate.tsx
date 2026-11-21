@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Key, Shield, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { SmartImage } from '../common/SmartImage';
 
 interface AccessGateProps {
   children: React.ReactNode;
@@ -10,16 +11,20 @@ const PASSWORD_KEY = 'tglc_auth_pass';
 const VALID_PASSWORD = 'glcglc';
 
 export const AccessGate: React.FC<AccessGateProps> = ({ children }) => {
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(false);
+
+  useEffect(() => {
     try {
-      return (
-        sessionStorage.getItem(PASSWORD_KEY) === 'granted' ||
-        localStorage.getItem(PASSWORD_KEY) === 'granted'
-      );
+      if (
+        window.sessionStorage.getItem(PASSWORD_KEY) === 'granted' ||
+        window.localStorage.getItem(PASSWORD_KEY) === 'granted'
+      ) {
+        setIsUnlocked(true);
+      }
     } catch {
-      return false;
+      // ignore storage errors
     }
-  });
+  }, []);
 
   const [inputVal, setInputVal] = useState('');
   const [error, setError] = useState(false);
@@ -90,9 +95,10 @@ export const AccessGate: React.FC<AccessGateProps> = ({ children }) => {
         {/* Official Antique Bronze Monogram Crest */}
         <div className="flex justify-center mb-6">
           <div className="relative group">
-            <img
+            <SmartImage
               src="/assets/aistudio/tglc_crest_transparent.png"
               alt="The Global Luxury Consortium Crest"
+              sizes="96px"
               className="w-20 h-24 sm:w-24 sm:h-28 object-contain filter brightness-105 drop-shadow-[0_4px_24px_rgba(185,134,51,0.38)] transition-transform duration-500 group-hover:scale-105"
             />
           </div>

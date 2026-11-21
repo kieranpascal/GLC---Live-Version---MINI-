@@ -76,49 +76,57 @@ export function getBreadcrumbsForRoute(route: RouteState): BreadcrumbItem[] | nu
   if (page === 'journal') {
     return [
       { label: 'Home', route: 'home' },
-      { label: 'The TGLC Journal', isCurrent: true }
+      { label: 'Journal', isCurrent: true }
     ];
   }
 
   if (page === 'commission-studio') {
     return [
       { label: 'Home', route: 'home' },
-      { label: 'Private Commission Studio', isCurrent: true }
+      { label: 'Commission Studio', isCurrent: true }
     ];
   }
 
   if (page === 'case-studies') {
     return [
       { label: 'Home', route: 'home' },
-      { label: 'Signature Itineraries & Case Studies', isCurrent: true }
+      { label: 'Signature Experiences', isCurrent: true }
+    ];
+  }
+
+  if (page === 'cultural-traditions') {
+    return [
+      { label: 'Home', route: 'home' },
+      { label: 'The Consortium', route: 'consortium' },
+      { label: 'Cultural & Global Traditions', isCurrent: true }
     ];
   }
 
   if (page === 'hidden-london') {
     return [
       { label: 'Home', route: 'home' },
-      { label: 'Sub-Rosa London & Prime Access', isCurrent: true }
+      { label: 'Hidden London', isCurrent: true }
     ];
   }
 
-  const subRosaMap: Partial<Record<PageRoute, string>> = {
-    'hidden-london-subterranean': 'Sector 01 · Subterranean Sanctums',
-    'hidden-london-industrial': 'Sector 02 · Brutalist & Monoliths',
-    'hidden-london-combat': 'Sector 03 · Underground Combat',
-    'hidden-london-gaming': 'Sector 04 · Clandestine Gaming',
-    'hidden-london-maritime': 'Sector 05 · Thames Nocturne Stealth',
-    'hidden-london-gastronomy': 'Sector 06 · Subversive Gastronomy',
-    'hidden-london-exploration': 'Sector 07 · Restricted Heights & Rails',
-    'hidden-london-after-hours': 'Sector 08 · Bohemian Jazz Salons',
-    'hidden-london-urban-clubs': 'Sector 09 · Urban Sound & Hip-Hop Clubs',
-    'hidden-london-itinerary': '007 Rogue 24-Hr Mission'
+  const hiddenLondonMap: Partial<Record<PageRoute, string>> = {
+    'hidden-london-subterranean': 'Underground Rooms',
+    'hidden-london-industrial': 'Architecture & Design Spaces',
+    'hidden-london-combat': 'Fight Nights',
+    'hidden-london-gaming': 'Casino Nights',
+    'hidden-london-maritime': 'Thames After Dark',
+    'hidden-london-gastronomy': 'Supper Clubs & Late-Night Dining',
+    'hidden-london-exploration': 'Rooftops & Rare Views',
+    'hidden-london-after-hours': 'Jazz & Cocktail Bars',
+    'hidden-london-urban-clubs': 'Late-Night Clubs & Vinyl Rooms',
+    'hidden-london-itinerary': '24 Hours in London'
   };
 
-  if (subRosaMap[page]) {
+  if (hiddenLondonMap[page]) {
     return [
       { label: 'Home', route: 'home' },
-      { label: 'The Other Side of London', route: 'hidden-london' },
-      { label: subRosaMap[page]!, isCurrent: true }
+      { label: 'Hidden London', route: 'hidden-london' },
+      { label: hiddenLondonMap[page]!, isCurrent: true }
     ];
   }
 
@@ -168,8 +176,15 @@ export function getBackLinkForRoute(route: RouteState): BackLinkInfo | null {
     page === 'hidden-london-itinerary'
   ) {
     return {
-      label: 'Return to Clandestine Hub',
+      label: 'Return to Hidden London',
       route: 'hidden-london'
+    };
+  }
+
+  if (page === 'cultural-traditions') {
+    return {
+      label: 'Back to The Consortium',
+      route: 'consortium'
     };
   }
 

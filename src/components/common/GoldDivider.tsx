@@ -10,11 +10,11 @@ export const GoldDivider: React.FC<GoldDividerProps> = ({ className = 'my-5 sm:m
   return (
     <div className={`relative w-full max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-center ${className}`}>
       <motion.div
-        initial={{ scaleX: 0.35, opacity: 0.55 }}
+        initial={{ scaleX: 0, opacity: 0.4 }}
         whileInView={{ scaleX: 1, opacity: 1 }}
         viewport={{ once: true, amount: 0.01 }}
-        transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#B98633]/55 to-transparent origin-center"
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#B98633]/55 to-transparent origin-left"
       />
       {withDiamond && (
         <motion.div
